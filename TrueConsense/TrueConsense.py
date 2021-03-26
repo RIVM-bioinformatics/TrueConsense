@@ -22,7 +22,7 @@ def GetArgs(givenargs):
         if os.path.isfile(fname):
             ext = "".join(pathlib.Path(fname).suffix)
             if ext != '.bam':
-                parser.error(f"Input file ({fname}) doesn't seem to be a BAM-file.")
+                parser.error(f"Input file {color.YELLOW}({fname}){color.END} doesn't seem to be a BAM-file.")
             return fname
         else:
             print(f'"{fname}" is not a file. Exiting...')
@@ -33,7 +33,7 @@ def GetArgs(givenargs):
         if os.path.isfile(fname):
             ext = "".join(pathlib.Path(fname).suffix)
             if ext not in allowedexts:
-                parser.error(f"Reference file ({fname}) doesn't seet to be a Fasta-file.")
+                parser.error(f"Reference file {color.YELLOW}({fname}){color.END} doesn't seem to be a Fasta-file.")
             return fname
         else:
             print(f'"{fname}" is not a file. Exiting...')
@@ -43,7 +43,7 @@ def GetArgs(givenargs):
         if os.path.isfile(fname):
             ext = "".join(pathlib.Path(fname).suffix)
             if ext != '.gff':
-                parser.error(f"Given file ({fname}) doesn't see to be a GFF file.")
+                parser.error(f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a GFF file.")
             return fname
         else:
             print(f'"{fname}" is not a file. Exiting...')
