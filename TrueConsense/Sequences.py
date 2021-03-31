@@ -114,9 +114,18 @@ def DraftConsensus(mincov, iDict, bam):
         realpos = i + 1
 
         cov = GetCoverage(iDict, realpos)
-        FirstNuc, SecondNuc, ThirdNuc, FourthNuc, FifthNuc = GetProminentNucleotides(
-            iDict, realpos
-        )
+        (
+            FirstNuc,
+            SecondNuc,
+            ThirdNuc,
+            FourthNuc,
+            FifthNuc,
+            FirstCount,
+            SecondCount,
+            ThirdCount,
+            FourthCount,
+            FifthCount,
+        ) = GetProminentNucleotides(iDict, realpos)
 
         if cov < mincov:
             draft.append("N")
@@ -161,6 +170,10 @@ def GetProminentNucleotides(iDict, position):
         sorteddist[-4][1],
         sorteddist[-5][1],
         sorteddist[-1][0],
+        sorteddist[-2][0],
+        sorteddist[-3][0],
+        sorteddist[-4][0],
+        sorteddist[-5][0],
     )
 
 
