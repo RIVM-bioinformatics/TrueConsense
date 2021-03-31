@@ -2,6 +2,20 @@ from .Inserts import ListInserts, ExtractInserts
 from .Coverage import GetCoverage
 
 
+def Inside_ORF(loc, gff):
+    exists = []
+    for k in gff.keys():
+        start = gff[k].get("start")
+        stop = gff[k].get("end")
+        
+        in_orf = loc in range(start, stop)
+        exists.append(in_orf)
+    
+    if any(exists) == True:
+        return True
+    else:
+        return False
+
 def BuildConsensus(mincov, iDict, GffDict, bam, outdir):
     
     consensus = []
@@ -9,6 +23,36 @@ def BuildConsensus(mincov, iDict, GffDict, bam, outdir):
     UpdatedGFF = UpdateGFF(mincov, iDict, bam, GffDict)
     
     hasinserts, insertpositions = ListInserts(iDict, mincov)
+    
+    def previousposition(loc, step):
+        if loc == 1:
+            return 1
+        if loc == 2:
+            return 1
+        if loc > 2:
+            return loc - step
+    
+    def nextposition(loc, step, last):
+        if loc == last:
+            return loc
+        if loc == (last - 1):
+            return loc + 1
+        if loc == (last - 2):
+            return loc + step
+    
+    lastposition = list(range(len(iDict)))[-1] + 1
+    for i in range(len(iDict)):
+        currentposition = i + 1
+        
+        prev1pos = previousposition(currentposition, 1)
+        prev2pos = previousposition(currentposition, 2)
+        next1pos = nextposition(currentposition, 1, lastposition)
+        next2pos = nextposition(currentposition, 2, lastposition)
+
+        within_orf = Inside_ORF(currentposition, UpdatedGFF)
+        
+        
+        
     pass
     
 def split_to_codons(seq, num):
@@ -66,7 +110,7 @@ def DraftConsensus(mincov, iDict, bam):
         realpos = i+1
         
         cov = GetCoverage(iDict, realpos)
-        FirstNuc, SecondNuc = GetProminentNucleotides(iDict, realpos)
+        FirstNuc, SecondNuc, ThirdNuc, FourthNuc, FifthNuc = GetProminentNucleotides(iDict, realpos)
         
         if cov < mincov:
             draft.append("N")
@@ -91,12 +135,17 @@ def DraftConsensus(mincov, iDict, bam):
                             continue
                         
     return "".join(draft), insertions
-        
+
 def GetProminentNucleotides(iDict, position):
     sorteddist = sorted(((value, key) for key, value in GetDistribution(iDict, position).items()))
-    ### sorteddist[-1][1] == most prominent
-    ### sorteddist[-2][1] == second most prominent
-    return sorteddist[-1][1], sorteddist[-2][1]
+    # sorteddist[-1][1] == most prominent nucleotide
+    # sorteddist[-2][1] == second most prominent nucleotide
+    # sorteddist[-3][1] == third most prominent nucleotide
+    ## etc etc
+    # sorteddist[-1][0] == counter for most prominent nucleotide
+    # sorteddist[-2][0] == counter for second most prominent nucleotide
+    ## etc etc
+    return sorteddist[-1][1], sorteddist[-2][1], sorteddist[-3][1], sorteddist[-4][1], sorteddist[-5][1], sorteddist[-1][0]
         
 def GetDistribution(iDict, position):
     dist = {}
