@@ -3,7 +3,6 @@
 """
 
 import os
-from os import path
 import pathlib
 import sys
 import argparse
@@ -13,7 +12,9 @@ import concurrent.futures as cf
 
 from .version import __version__
 from .func import MyHelpFormatter, color
-
+from .indexing import Gffindex, BuildIndex, Readbam
+from .Sequences import BuildConsensus
+from .Coverage import BuildCoverage
 
 def GetArgs(givenargs):
     
@@ -73,7 +74,7 @@ def GetArgs(givenargs):
     )
 
     reqs.add_argument(
-        '--ouput', '-o',
+        '--output', '-o',
         type=str,
         default=currentpath(),
         metavar='DIR',
@@ -140,6 +141,13 @@ def GetArgs(givenargs):
     )
     
     opts.add_argument(
+        '--version', '-v',
+        action='version',
+        version=__version__,
+        help='Show the TrueConsense version and exit'
+    )
+    
+    opts.add_argument(
         '--help', '-h',
         action='help',
         default=argparse.SUPPRESS,
@@ -158,4 +166,22 @@ def main():
         )
         sys.exit(1)
     args = GetArgs(sys.argv[1:])
-    print(args)
+    
+    bam = Readbam(args.input)
+    
+    with cf.ThreadPoolExecutor(max_workers=args.threads) as exec:
+        IndexDF = exec.submit(BuildIndex, args.input, args.reference)
+        IndexGff = exec.submit(Gffindex, args.features)
+
+        IndexDF = IndexDF.result()
+        IndexGff = IndexGff.result()
+    
+    indexDict = IndexDF.to_dict('index')
+    GffHeader = IndexGff.header
+    GffDF = IndexGff.df
+    GffDict = GffDF.to_dict('index')
+    
+    #if args.depth_of_coverage is not None:
+    #    BuildCoverage(indexDict, args.depth_of_coverage)
+    
+    BuildConsensus(1, indexDict, GffDict, bam, args.output)
