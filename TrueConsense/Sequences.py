@@ -18,7 +18,7 @@ def Inside_ORF(loc, gff):
         return False
 
 
-def BuildConsensus(mincov, iDict, GffDict, bam, outdir):
+def BuildConsensus(mincov, iDict, GffDict, bam, withambig, outdir):
 
     consensus = []
 
@@ -68,6 +68,58 @@ def BuildConsensus(mincov, iDict, GffDict, bam, outdir):
             cur_FifthCount,
         ) = GetProminentNucleotides(iDict, currentposition)
 
+        (
+            prv1_FirstNuc,
+            prv1_SecondNuc,
+            prv1_ThirdNuc,
+            prv1_FourthNuc,
+            prv1_FifthNuc,
+            prv1_FirstCount,
+            prv1_SecondCount,
+            prv1_ThirdCount,
+            prv1_FourthCount,
+            prv1_FifthCount,
+        ) = GetProminentNucleotides(iDict, prev1pos)
+
+        (
+            prv2_FirstNuc,
+            prv2_SecondNuc,
+            prv2_ThirdNuc,
+            prv2_FourthNuc,
+            prv2_FifthNuc,
+            prv2_FirstCount,
+            prv2_SecondCount,
+            prv2_ThirdCount,
+            prv2_FourthCount,
+            prv2_FifthCount,
+        ) = GetProminentNucleotides(iDict, prev2pos)
+
+        (
+            nxt1_FirstNuc,
+            nxt1_SecondNuc,
+            nxt1_ThirdNuc,
+            nxt1_FourthNuc,
+            nxt1_FifthNuc,
+            nxt1_FirstCount,
+            nxt1_SecondCount,
+            nxt1_ThirdCount,
+            nxt1_FourthCount,
+            nxt1_FifthCount,
+        ) = GetProminentNucleotides(iDict, next1pos)
+
+        (
+            nxt2_FirstNuc,
+            nxt2_SecondNuc,
+            nxt2_ThirdNuc,
+            nxt2_FourthNuc,
+            nxt2_FifthNuc,
+            nxt2_FirstCount,
+            nxt2_SecondCount,
+            nxt2_ThirdCount,
+            nxt2_FourthCount,
+            nxt2_FifthCount,
+        ) = GetProminentNucleotides(iDict, next2pos)
+
         HasAmbiguity, AmbigCharacter = IsAmbiguous(
             cur_FirstNuc,
             cur_SecondNuc,
@@ -80,9 +132,64 @@ def BuildConsensus(mincov, iDict, GffDict, bam, outdir):
             cov,
         )
 
-        
-        
+        if cov < mincov:
+            consensus.append("N")
+        else:
+            if cur_FirstNuc.upper() != "X":
+                if withambig is True and HasAmbiguity is True:
+                    consensus.append(AmbigCharacter)
+                else:
+                    if cur_FirstCount < mincov:
+                        consensus.append(cur_FirstNuc.lower())
+                    else:
+                        consensus.append(cur_FirstNuc.upper())
+            elif cur_FirstNuc.upper() == "X":
+                if within_orf is False:
+                    consensus.append("-")
+                elif within_orf is True:
+
+                    if (
+                        IsRealDel(
+                            cur_FirstNuc,
+                            prv1_FirstNuc,
+                            prv2_FirstNuc,
+                            nxt1_FirstNuc,
+                            nxt2_FirstNuc,
+                        )
+                        is True
+                    ):
+                        consensus.append("-")
+                    else:
+                        secondary_hasambig, sec_ambigchar = IsAmbiguous(
+                            cur_SecondNuc,
+                            cur_ThirdNuc,
+                            cur_FourthNuc,
+                            cur_FifthNuc,
+                            cur_SecondCount,
+                            cur_ThirdCount,
+                            cur_FourthCount,
+                            cur_FifthCount,
+                            cov,
+                        )
+                        if cur_SecondCount == 0:
+                            consensus.append("N")
+                        if cur_SecondCount < mincov:
+                            consensus.append(cur_SecondNuc)
+
     pass
+
+
+def IsRealDel(c, p1, p2, n1, n2):
+    if c != "X":
+        return False
+    if n1.upper() == "X" and p1.upper() == "X":
+        return True
+    elif n1.upper() == "X" and n2.upper() == "X":
+        return True
+    elif p1.upper() == "X" and p2.upper() == "X":
+        return True
+    else:
+        return False
 
 
 def split_to_codons(seq, num):
