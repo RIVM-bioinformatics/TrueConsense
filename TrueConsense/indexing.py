@@ -11,7 +11,7 @@ def Gffindex(file):
     return gffpd.read_gff3(file)
 
 def BuildIndex(bamfile, ref):
-    columns = ['coverage', 'A', 'T', 'C', 'G', 'D', 'I']
+    columns = ['coverage', 'A', 'T', 'C', 'G', 'X', 'I']
     p_index = pd.DataFrame(columns=columns)
     
     for r in pysamstats.stat_pileup(

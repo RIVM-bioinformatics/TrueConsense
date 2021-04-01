@@ -1,5 +1,6 @@
 from .Inserts import ListInserts, ExtractInserts
 from .Coverage import GetCoverage
+from .Ambig import IsAmbiguous
 
 
 def Inside_ORF(loc, gff):
@@ -52,6 +53,35 @@ def BuildConsensus(mincov, iDict, GffDict, bam, outdir):
 
         within_orf = Inside_ORF(currentposition, UpdatedGFF)
 
+        cov = GetCoverage(iDict, currentposition)
+
+        (
+            cur_FirstNuc,
+            cur_SecondNuc,
+            cur_ThirdNuc,
+            cur_FourthNuc,
+            cur_FifthNuc,
+            cur_FirstCount,
+            cur_SecondCount,
+            cur_ThirdCount,
+            cur_FourthCount,
+            cur_FifthCount,
+        ) = GetProminentNucleotides(iDict, currentposition)
+
+        HasAmbiguity, AmbigCharacter = IsAmbiguous(
+            cur_FirstNuc,
+            cur_SecondNuc,
+            cur_ThirdNuc,
+            cur_FourthNuc,
+            cur_FirstCount,
+            cur_SecondCount,
+            cur_ThirdCount,
+            cur_FourthCount,
+            cov,
+        )
+
+        
+        
     pass
 
 
@@ -130,7 +160,7 @@ def DraftConsensus(mincov, iDict, bam):
         if cov < mincov:
             draft.append("N")
         else:
-            if FirstNuc == "D":
+            if FirstNuc == "X":
                 draft.append("-")
             else:
                 draft.append(FirstNuc)
