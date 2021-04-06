@@ -37,9 +37,11 @@ def BuildConsensus(mincov, iDict, GffDict, bam, withambig, outdir):
     def nextposition(loc, step, last):
         if loc == last:
             return loc
-        if loc == (last - 1):
+        elif loc == (last - 1):
             return loc + 1
-        if loc == (last - 2):
+        elif loc == (last - 2):
+            return loc + step
+        else:
             return loc + step
 
     lastposition = list(range(len(iDict)))[-1] + 1
@@ -169,13 +171,31 @@ def BuildConsensus(mincov, iDict, GffDict, bam, withambig, outdir):
                             cur_ThirdCount,
                             cur_FourthCount,
                             cur_FifthCount,
-                            cov,
+                            cov-cur_FirstCount,
                         )
-                        if cur_SecondCount == 0:
-                            consensus.append("N")
-                        if cur_SecondCount < mincov:
-                            consensus.append(cur_SecondNuc)
-
+                        if withambig is True and secondary_hasambig is True:
+                            consensus.append(sec_ambigchar)
+                        else:
+                            if cur_SecondCount != 0:
+                                if cur_SecondCount >= mincov:
+                                    consensus.append(cur_SecondNuc)
+                                else:
+                                    consensus.append(cur_SecondNuc.lower())
+                            elif cur_SecondNuc == 0:
+                                consensus.append("N")
+        if cov > mincov:
+            if hasinserts is True:
+                for x in insertpositions:
+                    if currentposition == x:
+                        try:
+                            InsertNuc, InsertSize = ExtractInserts(bam, currentposition)
+                            if InsertNuc is not None:
+                                consensus.append(InsertNuc)
+                            else:
+                                continue
+                        except:
+                            continue
+                        
     pass
 
 
@@ -320,5 +340,5 @@ def GetDistribution(iDict, position):
     dist["T"] = iDict[position].get("T")
     dist["C"] = iDict[position].get("C")
     dist["G"] = iDict[position].get("G")
-    dist["D"] = iDict[position].get("D")
+    dist["X"] = iDict[position].get("X")
     return dist
