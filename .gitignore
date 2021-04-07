@@ -132,3 +132,9 @@ dmypy.json
 # IDE
 .vscode/
 notes.txt
+
+#additional
+*.tsv
+*.gff
+*.fasta
+*.fa
