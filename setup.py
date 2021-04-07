@@ -25,7 +25,8 @@ setup(
         'pandas>=1.2.3',
         'gffpandas>=1.2.0',
         'parmap>=1.5.2',
-        'tqdm>=4.59.0'
+        'tqdm>=4.59.0',
+        'biopython>=1.78'
     ],
     entry_points={'console_scripts': [
         'trueconsense = TrueConsense.TrueConsense:main',
