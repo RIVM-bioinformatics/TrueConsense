@@ -18,11 +18,9 @@ def Inside_ORF(loc, gff):
         return False
 
 
-def BuildConsensus(mincov, iDict, GffDict, bam, withambig, outdir):
+def BuildConsensus(mincov, iDict, UpdatedGFF, bam, withambig, includeIns):
 
     consensus = []
-
-    UpdatedGFF = UpdateGFF(mincov, iDict, bam, GffDict)
 
     hasinserts, insertpositions = ListInserts(iDict, mincov)
 
@@ -171,7 +169,7 @@ def BuildConsensus(mincov, iDict, GffDict, bam, withambig, outdir):
                             cur_ThirdCount,
                             cur_FourthCount,
                             cur_FifthCount,
-                            cov-cur_FirstCount,
+                            cov - cur_FirstCount,
                         )
                         if withambig is True and secondary_hasambig is True:
                             consensus.append(sec_ambigchar)
@@ -183,20 +181,21 @@ def BuildConsensus(mincov, iDict, GffDict, bam, withambig, outdir):
                                     consensus.append(cur_SecondNuc.lower())
                             elif cur_SecondNuc == 0:
                                 consensus.append("N")
-        if cov > mincov:
-            if hasinserts is True:
-                for x in insertpositions:
-                    if currentposition == x:
-                        try:
-                            InsertNuc, InsertSize = ExtractInserts(bam, currentposition)
-                            if InsertNuc is not None:
-                                consensus.append(InsertNuc)
-                            else:
+        if includeIns is True:
+            if cov > mincov:
+                if hasinserts is True:
+                    for x in insertpositions:
+                        if currentposition == x:
+                            try:
+                                InsertNuc, InsertSize = ExtractInserts(bam, currentposition)
+                                if InsertNuc is not None:
+                                    consensus.append(InsertNuc)
+                                else:
+                                    continue
+                            except:
                                 continue
-                        except:
-                            continue
-                        
-    pass
+
+    return "".join(consensus)
 
 
 def IsRealDel(c, p1, p2, n1, n2):

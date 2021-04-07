@@ -7,14 +7,16 @@ import pathlib
 import sys
 import argparse
 import multiprocessing
+import parmap
 
 import concurrent.futures as cf
 
 from .version import __version__
 from .func import MyHelpFormatter, color
 from .indexing import Gffindex, BuildIndex, Readbam
-from .Sequences import BuildConsensus
+from .Sequences import UpdateGFF
 from .Coverage import BuildCoverage
+from .Outputs import WriteGFF, WriteOutputs
 
 def GetArgs(givenargs):
     
@@ -132,12 +134,25 @@ def GetArgs(givenargs):
     )
     
     opts.add_argument(
+        '--output-gff', '-ogff',
+        type=str,
+        metavar='File',
+        help="Output GFF file with the corrected ORF positions"
+    )
+    
+    opts.add_argument(
         '--threads', '-t',
         default=standard_threads,
         metavar='N',
         help='Number of threads that can be used by TrueConsense.',
         type=int,
         
+    )
+
+    opts.add_argument(
+        '--noambiguity', '-noambig',
+        action='store_true',
+        help="Turn off ambiguity nucleotides in the generated consensus sequence"
     )
     
     opts.add_argument(
@@ -157,7 +172,6 @@ def GetArgs(givenargs):
     args = parser.parse_args(givenargs)
     
     return args
-
 
 def main():
     if len(sys.argv[1:]) < 1:
@@ -181,7 +195,24 @@ def main():
     GffDF = IndexGff.df
     GffDict = GffDF.to_dict('index')
     
-    #if args.depth_of_coverage is not None:
-    #    BuildCoverage(indexDict, args.depth_of_coverage)
+    with cf.ThreadPoolExecutor(max_workers=args.threads) as exec:
+        if args.depth_of_coverage is not None:
+            exec.submit(BuildCoverage, indexDict, args.depth_of_coverage)
+        
+        UpdatedGFF = exec.submit(UpdateGFF, 1, indexDict, bam, GffDict)
+        UpdatedGFF = UpdatedGFF.result()
+        
+        if args.output_gff is not None:
+            exec.submit(WriteGFF, GffHeader, UpdatedGFF, args.output_gff)
+        
+    if args.noambiguity is False:
+        IncludeAmbig = True
+    elif args.noambiguity is True:
+        IncludeAmbig = False
+
+    parallel(WriteOutputs, args.coverage_levels, indexDict, UpdatedGFF, args.input, IncludeAmbig, args.variants, args.samplename, args.reference, args.output, args.threads)
+    pass
     
-    BuildConsensus(1, indexDict, GffDict, bam, args.output)
+def parallel(function, covlist, indexDict, GffDict, inputbam, IncludeAmbig, WriteVCF, name, ref, outdir, workers):
+    parmap.map(function, covlist, indexDict, GffDict, inputbam, IncludeAmbig, WriteVCF, name, ref, outdir, pm_processes=workers)
+    pass
