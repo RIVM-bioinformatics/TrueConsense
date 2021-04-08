@@ -187,7 +187,9 @@ def BuildConsensus(mincov, iDict, UpdatedGFF, bam, withambig, includeIns):
                     for x in insertpositions:
                         if currentposition == x:
                             try:
-                                InsertNuc, InsertSize = ExtractInserts(bam, currentposition)
+                                InsertNuc, InsertSize = ExtractInserts(
+                                    bam, currentposition
+                                )
                                 if InsertNuc is not None:
                                     consensus.append(InsertNuc)
                                 else:
