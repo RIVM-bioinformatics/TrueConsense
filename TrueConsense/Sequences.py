@@ -220,22 +220,23 @@ def split_to_codons(seq, num):
 def UpdateGFF(mincov, iDict, bam, GffDict):
     draftseq, insertions = DraftConsensus(mincov, iDict, bam)
     stopcodons = ["TAG", "TAA", "TGA"]
+    rvstopcodon = ["CAT"] ## reverse complement atg
 
     shift = 0
     for k in GffDict.keys():
+        start = GffDict[k].get("start")
+        start = (
+            start - 1 + shift
+        )  ## adjust for 0-based + adjust for nucleotide shifts due to insertions
+        try:
+            nextstart = GffDict[k + 1].get("start")
+            nextstart = nextstart - 1
+        except:
+            nextstart = None
+
+        codons = split_to_codons(draftseq[start:], 3)
+
         if (GffDict[k].get("strand")) is "+":  ## 'forward' orientation of ORF
-            start = GffDict[k].get("start")
-            start = (
-                start - 1 + shift
-            )  ## adjust for 0-based + adjust for nucleotide shifts due to insertions
-            try:
-                nextstart = GffDict[k + 1].get("start")
-                nextstart = nextstart - 1
-            except:
-                nextstart = None
-
-            codons = split_to_codons(draftseq[start:], 3)
-
             i = 0
             for c in codons:
                 i += 1
@@ -245,18 +246,28 @@ def UpdateGFF(mincov, iDict, bam, GffDict):
             orfsize = i * 3
             end = start + orfsize
 
-            for p in insertions.keys():
-                if nextstart is not None:
-                    if p in range(start, nextstart):
-                        localshift = int(insertions[p])
-                        # GffDict[k+1]["start"] = int(nextstart) + int(localshift) + 1
-                        shift += int(localshift)
-                        # print(GffDict[k+1]["start"])
+        if (GffDict[k].get("strand")) is "-":
+            i = 0
+            for c in codons:
+                i += 1
+                if any(stops in c for stops in rvstopcodon) is True:
+                    break
+            orfsize = i * 3
+            end = start + orfsize
+            
+        for p in insertions.keys():
+            if nextstart is not None:
+                if p in range(start, nextstart):
+                    localshift = int(insertions[p])
+                    # GffDict[k+1]["start"] = int(nextstart) + int(localshift) + 1
+                    shift += int(localshift)
+                    # print(GffDict[k+1]["start"])
 
-            GffDict[k]["start"] = start + 1
-            GffDict[k]["end"] = end
+        GffDict[k]["start"] = start + 1
+        GffDict[k]["end"] = end
 
         if (GffDict[k].get("strand")) is "-":  ## 'reverse' orientation of ORF
+            
             continue
 
     return GffDict
