@@ -79,7 +79,7 @@ def WriteOutputs(
                         gapextension = "".join(gapextendedreflist)
                         joinedreflist = str(reflist[i - 1] + gapextension)
 
-                        currentcov = GetCoverage(iDict, i - 1)
+                        currentcov = GetCoverage(iDict, i + 1)
                         out.write(
                             f"{refID}\t{i}\t.\t{joinedreflist}\t{seqlist[i-1]}\t.\tPASS\tDP={currentcov};INDEL\n"
                         )
@@ -90,7 +90,7 @@ def WriteOutputs(
                             p = 1
                         else:
                             p = i
-                        currentcov = GetCoverage(iDict, p)
+                        currentcov = GetCoverage(iDict, p + 1)
                         out.write(
                             f"{refID}\t{i+1}\t.\t{reflist[i]}\t{seqlist[i]}\t.\tPASS\tDP={currentcov}\n"
                         )
