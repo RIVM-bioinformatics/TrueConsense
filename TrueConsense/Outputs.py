@@ -97,7 +97,7 @@ def WriteOutputs(
                 if hasinserts is True:
                     for lposition in insertpositions:
                         if i == lposition:
-                            currentcov = GetCoverage(iDict, i)
+                            currentcov = GetCoverage(iDict, i + 1)
                             try:
                                 to_insert, insertsize = ExtractInserts(bam, i)
                                 if to_insert is not None:
