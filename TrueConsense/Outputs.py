@@ -45,7 +45,7 @@ def WriteOutputs(
             refID = record.id
             reflist = list(record.seq)
 
-        seqlist = list(consensus_noinsert)
+        seqlist = list(consensus_noinsert.upper())
 
         with open(f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{cov}.vcf", "w") as out:
             out.write(
