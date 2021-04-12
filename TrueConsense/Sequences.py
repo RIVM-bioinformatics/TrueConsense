@@ -220,7 +220,7 @@ def split_to_codons(seq, num):
 def UpdateGFF(mincov, iDict, bam, GffDict):
     draftseq, insertions = DraftConsensus(mincov, iDict, bam)
     stopcodons = ["TAG", "TAA", "TGA"]
-    rvstopcodon = ["CAT"] ## reverse complement atg
+    rvstopcodon = ["CAT"]  ## reverse complement atg
 
     shift = 0
     for k in GffDict.keys():
@@ -254,7 +254,7 @@ def UpdateGFF(mincov, iDict, bam, GffDict):
                     break
             orfsize = i * 3
             end = start + orfsize
-            
+
         for p in insertions.keys():
             if nextstart is not None:
                 if p in range(start, nextstart):
@@ -267,7 +267,7 @@ def UpdateGFF(mincov, iDict, bam, GffDict):
         GffDict[k]["end"] = end
 
         if (GffDict[k].get("strand")) is "-":  ## 'reverse' orientation of ORF
-            
+
             continue
 
     return GffDict
