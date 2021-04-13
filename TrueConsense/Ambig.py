@@ -97,6 +97,8 @@ def AmbiguityType(p1, p2, p3, p4):
 
 
 def IsAmbiguous(nuc1, nuc2, nuc3, nuc4, count1, count2, count3, count4, cov):
+    if cov == 0:
+        return False, None
     if nuc1 == "X" or nuc2 == "X":
         return False, None
     p1, p2, p3, p4 = GetPercentages(count1, count2, count3, count4, cov)
