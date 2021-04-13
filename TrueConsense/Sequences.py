@@ -179,7 +179,7 @@ def BuildConsensus(mincov, iDict, UpdatedGFF, bam, withambig, includeIns):
                                     consensus.append(cur_SecondNuc)
                                 else:
                                     consensus.append(cur_SecondNuc.lower())
-                            elif cur_SecondNuc == 0:
+                            else:
                                 consensus.append("N")
         if includeIns is True:
             if cov > mincov:
