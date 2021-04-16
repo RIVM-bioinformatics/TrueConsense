@@ -15,7 +15,10 @@ def WriteGFF(gffheader, gffdict, output):
 
         for k, v in gffdict.items():
             for nk, nv in v.items():
-                out.write(str(nv) + "\t")
+                if str(nk) == str(list(v.keys())[-1]):
+                    out.write(str(nv))
+                else:
+                    out.write(str(nv) + "\t")
             out.write("\n")
     pass
 
