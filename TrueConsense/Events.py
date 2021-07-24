@@ -2,8 +2,8 @@ from collections import Counter
 import re
 
 
-def ListInserts(iDict, mincov):
-    positions = []
+def ListInserts(iDict, mincov, bam):
+    positions = {}
 
     for k in iDict.keys():
         cov = iDict[k].get("coverage")
@@ -17,8 +17,9 @@ def ListInserts(iDict, mincov):
             continue
         perc = (ins / cov) * 100
         if perc > 55:
-            positions.append(k)
-
+            InsNuc, insertsize = ExtractInserts(bam, k)
+            positions[k] = {}
+            positions[k][insertsize] = InsNuc
     if not positions:
         return False, None
     else:
@@ -44,3 +45,12 @@ def ExtractInserts(bam, position):
             return bases, insertsize
         else:
             return None, None
+
+def MinorityDel(index, p):
+    cov = index[p].get("coverage")
+    dels = index[p].get("X")
+    perc = (dels / cov) * 100
+
+    if perc >= 15:
+        return True
+    return False
