@@ -149,8 +149,8 @@ def GetArgs(givenargs):
         "--output-gff",
         "-ogff",
         type=str,
-        metavar="File",
-        help="Output GFF file with the corrected ORF positions",
+        metavar="DIR",
+        help="Create a corrected GFF file for every given coverage level within the given directory. The created files start with the given samplename",
     )
 
     opts.add_argument(
@@ -216,12 +216,6 @@ def main():
         if args.depth_of_coverage is not None:
             exec.submit(BuildCoverage, indexDict, args.depth_of_coverage)
 
-        UpdatedGFF = exec.submit(UpdateGFF, 1, indexDict, bam, GffDict)
-        UpdatedGFF = UpdatedGFF.result()
-
-        if args.output_gff is not None:
-            exec.submit(WriteGFF, GffHeader, UpdatedGFF, args.output_gff)
-
     if args.noambiguity is False:
         IncludeAmbig = True
     elif args.noambiguity is True:
@@ -231,12 +225,14 @@ def main():
         WriteOutputs,
         args.coverage_levels,
         indexDict,
-        UpdatedGFF,
+        GffDict,
         args.input,
         IncludeAmbig,
         args.variants,
         args.samplename,
         args.reference,
+        args.output_gff,
+        GffHeader,
         args.output,
         args.threads,
     )
@@ -253,6 +249,8 @@ def parallel(
     WriteVCF,
     name,
     ref,
+    gffoutdir,
+    gffheader,
     outdir,
     workers,
 ):
@@ -266,6 +264,8 @@ def parallel(
         WriteVCF,
         name,
         ref,
+        gffoutdir,
+        gffheader,
         outdir,
         pm_processes=workers,
     )
