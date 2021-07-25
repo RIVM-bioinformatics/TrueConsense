@@ -14,7 +14,6 @@ import concurrent.futures as cf
 from .version import __version__
 from .func import MyHelpFormatter, color
 from .indexing import Gffindex, BuildIndex, Readbam
-from .Sequences import UpdateGFF
 from .Coverage import BuildCoverage
 from .Outputs import WriteGFF, WriteOutputs
 
