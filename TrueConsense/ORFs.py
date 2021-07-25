@@ -1,4 +1,3 @@
-from .Sequences import split_to_codons
 
 def in_orf(loc, gffd):
     exists = []
@@ -12,6 +11,9 @@ def in_orf(loc, gffd):
     if any(exists) == True:
         return True
     return False
+
+def split_to_codons(seq):
+    return [seq[start : start + 3] for start in range(0, len(seq), 3)]
 
 def SolveTripletLength(uds, mds):
     mdslen = len(mds)
@@ -37,7 +39,7 @@ def SolveTripletLength(uds, mds):
 def CorrectGFF(oldgffdict, newgffdict, cons, p, skips, inserts):
     
     stopcodons = ["TAG", "TAA", "TGA"]
-    rvstopcodon = ["CAT"]
+    #rvstopcodon = ["CAT"]
 
     for k in oldgffdict.keys():
         start = oldgffdict[k].get('start')
