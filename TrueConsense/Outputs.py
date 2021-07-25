@@ -1,5 +1,6 @@
 import os
 import sys
+
 from .Coverage import GetCoverage
 from .Events import ListInserts
 from .indexing import Readbam
@@ -9,8 +10,8 @@ from datetime import date
 from Bio import SeqIO
 
 
-def WriteGFF(gffheader, gffdict, output):
-    with open(output, "w") as out:
+def WriteGFF(gffheader, gffdict, outdir, name, cov):
+    with open(f"{outdir}/{name}_{cov}.gff", "w") as out:
         out.write(gffheader)
 
         for k, v in gffdict.items():
@@ -21,7 +22,7 @@ def WriteGFF(gffheader, gffdict, output):
 
 
 def WriteOutputs(
-    cov, iDict, uGffDict, inputbam, IncludeAmbig, WriteVCF, name, ref, outdir
+    cov, iDict, uGffDict, inputbam, IncludeAmbig, WriteVCF, name, ref, gffout, gffheader, outdir
 ):
     """
     step 1: construct the consensus sequences, both with and without inserts
@@ -31,11 +32,14 @@ def WriteOutputs(
     today = date.today().strftime("%Y%m%d")
 
     bam = Readbam(inputbam)
-    consensus = BuildConsensus(cov, iDict, uGffDict, bam, IncludeAmbig, True)
-    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, bam, IncludeAmbig, False)
+    consensus, newgff = BuildConsensus(cov, iDict, uGffDict, bam, IncludeAmbig, True)
+    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, bam, IncludeAmbig, False)[0]
+    
+    if gffout is not None:
+        WriteGFF(gffheader, newgff, gffout, name, cov)
 
     if WriteVCF is not None:
-        hasinserts, insertpositions = ListInserts(iDict, cov)
+        hasinserts, insertpositions = ListInserts(iDict, cov, bam)
 
         q = 0
         for record in SeqIO.parse(ref, "fasta"):
@@ -98,17 +102,15 @@ def WriteOutputs(
                     for lposition in insertpositions:
                         if i == lposition:
                             currentcov = GetCoverage(iDict, i + 1)
-                            try:
-                                to_insert, insertsize = ExtractInserts(bam, i)
-                                if to_insert is not None:
-                                    CombinedEntry = seqlist[i] + to_insert
-                                    out.write(
-                                        f"{refID}\t{i}\t.\t{reflist[i]}\t{CombinedEntry}\t.\tPASS\tDP={currentcov};INDEL\n"
-                                    )
-                                else:
-                                    continue
-                            except:
-                                continue
+                            if currentcov > cov:
+                                for y in insertpositions.get(lposition):
+                                    to_insert = str(insertpositions.get(lposition).get(y))
+                                    if to_insert is not None:
+                                        CombinedEntry = seqlist[i] + to_insert
+                                        out.write(
+                                            f"{refID}\t{i}\t.\t{reflist[i]}\t{CombinedEntry}\t.\tPASS\tDP={currentcov};INDEL\n")
+                                    else:
+                                        continue
 
     with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{cov}.fa", "w") as out:
         out.write(f">{name}_cov_ge_{cov}\n{consensus}\n")
