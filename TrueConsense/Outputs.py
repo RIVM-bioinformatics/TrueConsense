@@ -1,7 +1,7 @@
 import os
 import sys
 from .Coverage import GetCoverage
-from .Inserts import ExtractInserts, ListInserts
+from .Events import ListInserts
 from .indexing import Readbam
 from .Sequences import BuildConsensus
 
