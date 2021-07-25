@@ -70,10 +70,6 @@ def _orf_hasoverlap(index, p):
     return False
 
 
-def split_to_codons(seq):
-    return [seq[start : start + 3] for start in range(0, len(seq), 3)]
-
-
 def GetNucleotide(iDict, position, count):
     sorteddist = sorted(
         ((value, key) for key, value in GetDistribution(iDict, position).items())
@@ -91,7 +87,7 @@ def GetDistribution(iDict, position):
     return dist
 
 
-def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam):
+def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam, includeINS):
     cons = []
 
     p_index = complement_index(iDict, GFFdict, [])
@@ -153,6 +149,14 @@ def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam):
                                             cons.append(PrimaryN.lower())
                                         else:
                                             cons.append(PrimaryN.upper())
+                            else:
+                                if IncludeAmbig is True and HasAmbiguity is True:
+                                    cons.append(AmbigChar)
+                                else:
+                                    if PrimaryC < mincov:
+                                        cons.append(PrimaryN.lower())
+                                    else:
+                                        cons.append(PrimaryN.upper())
                         else:
                             if IncludeAmbig is True and HasAmbiguity is True:
                                 cons.append(AmbigChar)
@@ -169,6 +173,14 @@ def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam):
                             dskips.append(b)
                             for x in uds:
                                 dskips.append(x)
+                        else:
+                            if IncludeAmbig is True and HasAmbiguity is True:
+                                cons.append(AmbigChar)
+                            else:
+                                if PrimaryC < mincov:
+                                    cons.append(PrimaryN.lower())
+                                else:
+                                    cons.append(PrimaryN.upper())
                 else:
                     if IncludeAmbig is True and HasAmbiguity is True:
                         cons.append(AmbigChar)
@@ -202,13 +214,14 @@ def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam):
                 else:
                     cons.append("-")
 
-        if cov > mincov:
-            if hasinserts is True:
-                for x in insertpositions:
-                    if b == x:
-                        for i in insertpositions.get(x):
-                            cons.append(str(insertpositions.get(x).get(i)))
+        if includeINS is True:
+            if cov > mincov:
+                if hasinserts is True:
+                    for x in insertpositions:
+                        if b == x:
+                            for i in insertpositions.get(x):
+                                cons.append(str(insertpositions.get(x).get(i)))
 
         newGffdict = CorrectGFF(GFFdict, newGffdict, cons, b, dskips, insertpositions)
-
-    return cons, newGffdict
+        
+    return ''.join(cons), newGffdict
