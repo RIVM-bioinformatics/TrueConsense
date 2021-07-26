@@ -32,8 +32,8 @@ def WriteOutputs(
     today = date.today().strftime("%Y%m%d")
 
     bam = Readbam(inputbam)
-    consensus, newgff = BuildConsensus(cov, iDict, uGffDict, bam, IncludeAmbig, True)
-    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, bam, IncludeAmbig, False)[0]
+    consensus, newgff = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, True)
+    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, False)[0]
     
     if gffout is not None:
         WriteGFF(gffheader, newgff, gffout, name, cov)
