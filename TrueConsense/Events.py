@@ -33,6 +33,8 @@ def ExtractInserts(bam, position):
     for pileupcolumn in bam.pileup(rname, start, end, truncate=True):
         items = pileupcolumn.get_query_sequences(add_indels=True)
         found = []
+        if bool(items) is False:
+            return None, None
         for i in items:
             found.append(i.upper())
         sorteddist = dict(Counter(found).most_common())
@@ -45,6 +47,7 @@ def ExtractInserts(bam, position):
             return bases, insertsize
         else:
             return None, None
+    return None, None
 
 def MinorityDel(index, p):
     cov = index[p].get("coverage")
