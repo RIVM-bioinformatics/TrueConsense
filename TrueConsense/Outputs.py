@@ -11,7 +11,7 @@ from Bio import SeqIO
 
 
 def WriteGFF(gffheader, gffdict, outdir, name, cov):
-    with open(f"{outdir}/{name}_{cov}.gff", "w") as out:
+    with open(f"{outdir}/{name}_cov_ge_{cov}.gff", "w") as out:
         out.write(gffheader)
 
         for k, v in gffdict.items():

@@ -15,7 +15,7 @@ from .version import __version__
 from .func import MyHelpFormatter, color
 from .indexing import Gffindex, BuildIndex, Readbam
 from .Coverage import BuildCoverage
-from .Outputs import WriteGFF, WriteOutputs
+from .Outputs import WriteOutputs
 
 
 def GetArgs(givenargs):
