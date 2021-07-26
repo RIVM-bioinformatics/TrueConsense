@@ -211,6 +211,15 @@ def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam, includeINS):
                                 dskips.append(b)
                                 for x in wfds:
                                     dskips.append(x)
+                            else:
+                                SecondaryN, SecondaryC = GetNucleotide(p_index, b, 2)
+                                if IncludeAmbig is True and HasAmbiguity is True:
+                                    cons.append(AmbigChar)
+                                else:
+                                    if SecondaryC < mincov:
+                                        cons.append(SecondaryN.lower())
+                                    else:
+                                        cons.append(SecondaryN.upper())
                 else:
                     cons.append("-")
 
