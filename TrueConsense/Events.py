@@ -18,6 +18,8 @@ def ListInserts(iDict, mincov, bam):
         perc = (ins / cov) * 100
         if perc > 55:
             InsNuc, insertsize = ExtractInserts(bam, k)
+            if InsNuc is None or insertsize is None:
+                continue
             positions[k] = {}
             positions[k][insertsize] = InsNuc
     if not positions:
