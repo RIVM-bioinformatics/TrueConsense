@@ -62,8 +62,13 @@ def CorrectGFF(oldgffdict, newgffdict, cons, p, skips, inserts):
                     if any(s in c for s in stopcodons) is True:
                         break
                 orfsize = it * 3
+                
+                if shift % 3 == 0:
+                    newend = start + orfsize + shift
+                else:
+                    newend = start + orfsize + shift-1
 
-                newend = start + orfsize + shift
+                #newend = start + orfsize + shift
 
                 if p == newend:
                     up = {'end': newend}

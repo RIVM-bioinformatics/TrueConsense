@@ -53,7 +53,7 @@ def WriteOutputs(
 
         with open(f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{cov}.vcf", "w") as out:
             out.write(
-                f"""##fileformat=VCFv4.2
+                f"""##fileformat=VCFv4.3
 ##fileDate={today}
 ##source='TrueConsense {' '.join(sys.argv[1:])}'
 ##reference='{ref}'
