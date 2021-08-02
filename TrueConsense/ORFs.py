@@ -36,15 +36,30 @@ def SolveTripletLength(uds, mds):
             return True
         return False
     
-def CorrectGFF(oldgffdict, newgffdict, cons, p, skips, inserts):
+def CorrectStartPositions(gffd, shifts, p):
+    for k in gffd.keys():
+        start = gffd[k].get('start')
+        
+        if start > p:
+            nstart = int(start) + int(shifts)
+            update = {'start': nstart}
+            
+            gffd[k].update(update)
+    return gffd
+    
+def CorrectGFF(newgffdict, cons, p, skips, inserts):
     
     stopcodons = ["TAG", "TAA", "TGA"]
     #rvstopcodon = ["CAT"]
+    
+    if p in inserts:
+        newgffdict = CorrectStartPositions(newgffdict, list(inserts[p].keys())[0], p)
+        
 
-    for k in oldgffdict.keys():
-        start = oldgffdict[k].get('start')
-        end = oldgffdict[k].get('end')
-        orient = oldgffdict[k].get('strand')
+    for k in newgffdict.keys():
+        start = newgffdict[k].get('start')
+        end = newgffdict[k].get('end')
+        orient = newgffdict[k].get('strand')
 
         shift = 0
         

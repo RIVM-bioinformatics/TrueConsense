@@ -231,6 +231,6 @@ def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam, includeINS):
                             for i in insertpositions.get(x):
                                 cons.append(str(insertpositions.get(x).get(i)))
 
-        newGffdict = CorrectGFF(GFFdict, newGffdict, cons, b, dskips, insertpositions)
+        newGffdict = CorrectGFF(newGffdict, cons, b, dskips, insertpositions)
         
     return ''.join(cons), newGffdict
