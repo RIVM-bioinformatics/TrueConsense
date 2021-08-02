@@ -100,6 +100,9 @@ def unpack(q):
 
 
 def IsAmbiguous(one, two, three, four, cov):
+    if cov == 0:
+        return False, None
+    
     nuc1, count1 = unpack(one)
     nuc2, count2 = unpack(two)
     nuc3, count3 = unpack(three)
