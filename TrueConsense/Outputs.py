@@ -16,7 +16,7 @@ def WriteGFF(gffheader, gffdict, outdir, name, cov):
 
         for k, v in gffdict.items():
             for nk, nv in v.items():
-                if str(nk) == str(list(v.keys))[-1]:
+                if str(nk) == str(list(v.keys())[-1]):
                     out.write(str(nv))
                 else:
                     out.write(str(nv) + "\t")
