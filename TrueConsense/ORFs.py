@@ -52,7 +52,7 @@ def CorrectGFF(newgffdict, cons, p, skips, inserts):
     stopcodons = ["TAG", "TAA", "TGA"]
     #rvstopcodon = ["CAT"]
     
-    if p in inserts:
+    if inserts is not None and p in inserts:
         newgffdict = CorrectStartPositions(newgffdict, list(inserts[p].keys())[0], p)
         
 
