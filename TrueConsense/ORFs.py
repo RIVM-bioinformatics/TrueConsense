@@ -47,7 +47,7 @@ def CorrectStartPositions(gffd, shifts, p):
             gffd[k].update(update)
     return gffd
     
-def CorrectGFF(newgffdict, cons, p, skips, inserts):
+def CorrectGFF(oldgffdict, newgffdict, cons, p, inserts):
     
     stopcodons = ["TAG", "TAA", "TGA"]
     #rvstopcodon = ["CAT"]
@@ -69,22 +69,37 @@ def CorrectGFF(newgffdict, cons, p, skips, inserts):
                 shift = rseq.count('-')
                 seq = rseq.replace('-', '')
 
-                codons = split_to_codons(seq)
-
-                it=0
-                for c in codons:
-                    it += 1
-                    if any(s in c for s in stopcodons) is True:
-                        break
-                orfsize = it * 3
-                
-                if shift % 3 == 0:
-                    newend = start + orfsize + shift
-                else:
-                    newend = start + orfsize + shift-1
-
-                if p == newend:
-                    up = {'end': newend}
+                if cons[-1] == '-':
+                    achieved = False
+                    override_end = oldgffdict[k].get('end')
+                    up = {'end': override_end}
                     newgffdict[k].update(up)
+                    
+                else:
+                    
+                    codons = split_to_codons(seq)
+
+                    achieved = False
+
+                    it=0
+                    for c in codons:
+                        it += 1
+                        if any(s in c for s in stopcodons) is True:
+                            achieved = True
+                            break
+                    orfsize = it * 3
+
+                    if shift % 3 == 0:
+                        newend = start + orfsize + shift
+                    else:
+                        newend = start + orfsize + shift-1
+                    
+                    
+                    if achieved is False:
+                        newend = newend + 1
+
+                    if p == newend:
+                        up = {'end': newend}
+                        newgffdict[k].update(up)
 
     return newgffdict
