@@ -16,7 +16,10 @@ def WriteGFF(gffheader, gffdict, outdir, name, cov):
 
         for k, v in gffdict.items():
             for nk, nv in v.items():
-                out.write(str(nv) + "\t")
+                if str(nk) == str(list(v.keys))[-1]:
+                    out.write(str(nv))
+                else:
+                    out.write(str(nv) + "\t")
             out.write("\n")
     pass
 
@@ -57,6 +60,7 @@ def WriteOutputs(
 ##fileDate={today}
 ##source='TrueConsense {' '.join(sys.argv[1:])}'
 ##reference='{ref}'
+##contig=<ID={refID}>
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
 ##INFO=<ID=INDEL,Number=0,Type=Flag,Description="Indicates that the variant is an INDEL.">
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
