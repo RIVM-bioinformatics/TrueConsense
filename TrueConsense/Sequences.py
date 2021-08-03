@@ -105,13 +105,13 @@ def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam, includeINS):
 
         if b in dskips:
             cons.append("-")
-            newGffdict = CorrectGFF(GFFdict, newGffdict, cons, b, insertpositions)
+            newGffdict = CorrectGFF(GFFdict, newGffdict, cons, b, insertpositions, mincov, cov)
             continue
 
         if cov < mincov:
             cons.append("N")
             # Simply add a 'N' to the consensus at this position if the coverage is below the threshold
-            newGffdict = CorrectGFF(GFFdict, newGffdict, cons, b, insertpositions)
+            newGffdict = CorrectGFF(GFFdict, newGffdict, cons, b, insertpositions, mincov, cov)
             continue
         else:
             PrimaryN, PrimaryC = GetNucleotide(p_index, b, 1)
@@ -233,6 +233,6 @@ def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam, includeINS):
                             for i in insertpositions.get(x):
                                 cons.append(str(insertpositions.get(x).get(i)))
 
-        newGffdict = CorrectGFF(GFFdict, newGffdict, cons, b, insertpositions)
+        newGffdict = CorrectGFF(GFFdict, newGffdict, cons, b, insertpositions, mincov, cov)
         
     return ''.join(cons), newGffdict

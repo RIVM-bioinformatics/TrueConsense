@@ -47,13 +47,14 @@ def CorrectStartPositions(gffd, shifts, p):
             gffd[k].update(update)
     return gffd
     
-def CorrectGFF(oldgffdict, newgffdict, cons, p, inserts):
+def CorrectGFF(oldgffdict, newgffdict, cons, p, inserts, mincov, cov):
     
     stopcodons = ["TAG", "TAA", "TGA"]
     #rvstopcodon = ["CAT"]
     
     if inserts is not None and p in inserts:
-        newgffdict = CorrectStartPositions(newgffdict, list(inserts[p].keys())[0], p)
+        if cov > mincov:
+            newgffdict = CorrectStartPositions(newgffdict, list(inserts[p].keys())[0], p)
         
 
     for k in newgffdict.keys():
