@@ -91,7 +91,7 @@ def CorrectGFF(oldgffdict, newgffdict, cons, p, inserts, mincov, cov):
                     orfsize = it * 3
 
                     if shift % 3 == 0:
-                        newend = start + orfsize + shift
+                        newend = start + orfsize + shift-1
                     else:
                         newend = start + orfsize + shift-1
                     
