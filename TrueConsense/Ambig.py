@@ -95,6 +95,7 @@ def AmbiguityType(p1, p2, p3, p4):
         AType = None
     return AType
 
+
 def unpack(q):
     return q[0], q[1]
 
@@ -102,7 +103,7 @@ def unpack(q):
 def IsAmbiguous(one, two, three, four, cov):
     if cov == 0:
         return False, None
-    
+
     nuc1, count1 = unpack(one)
     nuc2, count2 = unpack(two)
     nuc3, count3 = unpack(three)

@@ -51,6 +51,7 @@ def ExtractInserts(bam, position):
             return None, None
     return None, None
 
+
 def MinorityDel(index, p):
     cov = index[p].get("coverage")
     dels = index[p].get("X")

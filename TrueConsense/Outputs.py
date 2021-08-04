@@ -25,7 +25,17 @@ def WriteGFF(gffheader, gffdict, outdir, name, cov):
 
 
 def WriteOutputs(
-    cov, iDict, uGffDict, inputbam, IncludeAmbig, WriteVCF, name, ref, gffout, gffheader, outdir
+    cov,
+    iDict,
+    uGffDict,
+    inputbam,
+    IncludeAmbig,
+    WriteVCF,
+    name,
+    ref,
+    gffout,
+    gffheader,
+    outdir,
 ):
     """
     step 1: construct the consensus sequences, both with and without inserts
@@ -36,8 +46,10 @@ def WriteOutputs(
 
     bam = Readbam(inputbam)
     consensus, newgff = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, True)
-    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, False)[0]
-    
+    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, False)[
+        0
+    ]
+
     if gffout is not None:
         WriteGFF(gffheader, newgff, gffout, name, cov)
 
@@ -108,11 +120,14 @@ def WriteOutputs(
                             currentcov = GetCoverage(iDict, i + 1)
                             if currentcov > cov:
                                 for y in insertpositions.get(lposition):
-                                    to_insert = str(insertpositions.get(lposition).get(y))
+                                    to_insert = str(
+                                        insertpositions.get(lposition).get(y)
+                                    )
                                     if to_insert is not None:
                                         CombinedEntry = seqlist[i] + to_insert
                                         out.write(
-                                            f"{refID}\t{i}\t.\t{reflist[i]}\t{CombinedEntry}\t.\tPASS\tDP={currentcov};INDEL\n")
+                                            f"{refID}\t{i}\t.\t{reflist[i]}\t{CombinedEntry}\t.\tPASS\tDP={currentcov};INDEL\n"
+                                        )
                                     else:
                                         continue
 
