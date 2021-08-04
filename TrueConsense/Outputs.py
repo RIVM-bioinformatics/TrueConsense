@@ -1,13 +1,13 @@
 import os
 import sys
+from datetime import date
+
+from Bio import SeqIO
 
 from .Coverage import GetCoverage
 from .Events import ListInserts
 from .indexing import Readbam
 from .Sequences import BuildConsensus
-
-from datetime import date
-from Bio import SeqIO
 
 
 def WriteGFF(gffheader, gffdict, outdir, name, cov):

@@ -1,7 +1,7 @@
 import gffpandas.gffpandas as gffpd
 import pandas as pd
-import pysamstats
 import pysam
+import pysamstats
 
 
 def Readbam(f):

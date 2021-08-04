@@ -1,9 +1,9 @@
 import copy
 
-from .Events import ListInserts, MinorityDel
-from .Coverage import GetCoverage
 from .Ambig import IsAmbiguous
-from .ORFs import in_orf, SolveTripletLength, CorrectGFF
+from .Coverage import GetCoverage
+from .Events import ListInserts, MinorityDel
+from .ORFs import CorrectGFF, SolveTripletLength, in_orf
 
 
 def WalkForward(index, p, fixedpositions="expand"):

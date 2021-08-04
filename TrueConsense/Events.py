@@ -1,5 +1,5 @@
-from collections import Counter
 import re
+from collections import Counter
 
 
 def ListInserts(iDict, mincov, bam):

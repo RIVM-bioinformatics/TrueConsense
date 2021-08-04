@@ -2,20 +2,20 @@
 >add some notices here
 """
 
+import argparse
+import concurrent.futures as cf
+import multiprocessing
 import os
 import pathlib
 import sys
-import argparse
-import multiprocessing
+
 import parmap
 
-import concurrent.futures as cf
-
-from .version import __version__
-from .func import MyHelpFormatter, color
-from .indexing import Gffindex, BuildIndex, Readbam
 from .Coverage import BuildCoverage
+from .func import MyHelpFormatter, color
+from .indexing import BuildIndex, Gffindex, Readbam
 from .Outputs import WriteOutputs
+from .version import __version__
 
 
 def GetArgs(givenargs):

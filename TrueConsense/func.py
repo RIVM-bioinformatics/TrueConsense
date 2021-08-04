@@ -1,7 +1,6 @@
 import argparse
 import os
 import shutil
-import os
 
 
 class MyHelpFormatter(argparse.RawTextHelpFormatter):
