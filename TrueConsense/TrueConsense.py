@@ -200,9 +200,9 @@ def main():
 
     bam = Readbam(args.input)
 
-    with cf.ThreadPoolExecutor(max_workers=args.threads) as exec:
-        IndexDF = exec.submit(BuildIndex, args.input, args.reference)
-        IndexGff = exec.submit(Gffindex, args.features)
+    with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
+        IndexDF = xc.submit(BuildIndex, args.input, args.reference)
+        IndexGff = xc.submit(Gffindex, args.features)
 
         IndexDF = IndexDF.result()
         IndexGff = IndexGff.result()
@@ -212,9 +212,9 @@ def main():
     GffDF = IndexGff.df
     GffDict = GffDF.to_dict("index")
 
-    with cf.ThreadPoolExecutor(max_workers=args.threads) as exec:
+    with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
         if args.depth_of_coverage is not None:
-            exec.submit(BuildCoverage, indexDict, args.depth_of_coverage)
+            xc.submit(BuildCoverage, indexDict, args.depth_of_coverage)
 
     if args.noambiguity is False:
         IncludeAmbig = True
@@ -236,7 +236,7 @@ def main():
         args.output,
         args.threads,
     )
-    pass
+
 
 
 def parallel(
@@ -269,4 +269,4 @@ def parallel(
         outdir,
         pm_processes=workers,
     )
-    pass
+
