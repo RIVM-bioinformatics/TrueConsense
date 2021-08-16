@@ -1,16 +1,17 @@
 import os
 import sys
+from datetime import date
+
+from Bio import SeqIO
+
 from .Coverage import GetCoverage
-from .Inserts import ExtractInserts, ListInserts
+from .Events import ListInserts
 from .indexing import Readbam
 from .Sequences import BuildConsensus
 
-from datetime import date
-from Bio import SeqIO
 
-
-def WriteGFF(gffheader, gffdict, output):
-    with open(output, "w") as out:
+def WriteGFF(gffheader, gffdict, outdir, name, cov):
+    with open(f"{outdir}/{name}_cov_ge_{cov}.gff", "w") as out:
         out.write(gffheader)
 
         for k, v in gffdict.items():
@@ -24,7 +25,17 @@ def WriteGFF(gffheader, gffdict, output):
 
 
 def WriteOutputs(
-    cov, iDict, uGffDict, inputbam, IncludeAmbig, WriteVCF, name, ref, outdir
+    cov,
+    iDict,
+    uGffDict,
+    inputbam,
+    IncludeAmbig,
+    WriteVCF,
+    name,
+    ref,
+    gffout,
+    gffheader,
+    outdir,
 ):
     """
     step 1: construct the consensus sequences, both with and without inserts
@@ -34,11 +45,16 @@ def WriteOutputs(
     today = date.today().strftime("%Y%m%d")
 
     bam = Readbam(inputbam)
-    consensus = BuildConsensus(cov, iDict, uGffDict, bam, IncludeAmbig, True)
-    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, bam, IncludeAmbig, False)
+    consensus, newgff = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, True)
+    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, False)[
+        0
+    ]
+
+    if gffout is not None:
+        WriteGFF(gffheader, newgff, gffout, name, cov)
 
     if WriteVCF is not None:
-        hasinserts, insertpositions = ListInserts(iDict, cov)
+        hasinserts, insertpositions = ListInserts(iDict, cov, bam)
 
         q = 0
         for record in SeqIO.parse(ref, "fasta"):
@@ -52,7 +68,7 @@ def WriteOutputs(
 
         with open(f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{cov}.vcf", "w") as out:
             out.write(
-                f"""##fileformat=VCFv4.2
+                f"""##fileformat=VCFv4.3
 ##fileDate={today}
 ##source='TrueConsense {' '.join(sys.argv[1:])}'
 ##reference='{ref}'
@@ -102,17 +118,18 @@ def WriteOutputs(
                     for lposition in insertpositions:
                         if i == lposition:
                             currentcov = GetCoverage(iDict, i + 1)
-                            try:
-                                to_insert, insertsize = ExtractInserts(bam, i)
-                                if to_insert is not None:
-                                    CombinedEntry = seqlist[i] + to_insert
-                                    out.write(
-                                        f"{refID}\t{i}\t.\t{reflist[i]}\t{CombinedEntry}\t.\tPASS\tDP={currentcov};INDEL\n"
+                            if currentcov > cov:
+                                for y in insertpositions.get(lposition):
+                                    to_insert = str(
+                                        insertpositions.get(lposition).get(y)
                                     )
-                                else:
-                                    continue
-                            except:
-                                continue
+                                    if to_insert is not None:
+                                        CombinedEntry = seqlist[i] + to_insert
+                                        out.write(
+                                            f"{refID}\t{i}\t.\t{reflist[i]}\t{CombinedEntry}\t.\tPASS\tDP={currentcov};INDEL\n"
+                                        )
+                                    else:
+                                        continue
 
     with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{cov}.fa", "w") as out:
         out.write(f">{name}_cov_ge_{cov}\n{consensus}\n")

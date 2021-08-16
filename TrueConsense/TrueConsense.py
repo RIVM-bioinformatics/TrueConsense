@@ -2,21 +2,20 @@
 >add some notices here
 """
 
+import argparse
+import concurrent.futures as cf
+import multiprocessing
 import os
 import pathlib
 import sys
-import argparse
-import multiprocessing
+
 import parmap
 
-import concurrent.futures as cf
-
-from .version import __version__
-from .func import MyHelpFormatter, color
-from .indexing import Gffindex, BuildIndex, Readbam
-from .Sequences import UpdateGFF
 from .Coverage import BuildCoverage
-from .Outputs import WriteGFF, WriteOutputs
+from .func import MyHelpFormatter, color
+from .indexing import BuildIndex, Gffindex, Readbam
+from .Outputs import WriteOutputs
+from .version import __version__
 
 
 def GetArgs(givenargs):
@@ -150,8 +149,8 @@ def GetArgs(givenargs):
         "--output-gff",
         "-ogff",
         type=str,
-        metavar="File",
-        help="Output GFF file with the corrected ORF positions",
+        metavar="DIR",
+        help="Create a corrected GFF file for every given coverage level within the given directory. The created files start with the given samplename",
     )
 
     opts.add_argument(
@@ -201,9 +200,9 @@ def main():
 
     bam = Readbam(args.input)
 
-    with cf.ThreadPoolExecutor(max_workers=args.threads) as exec:
-        IndexDF = exec.submit(BuildIndex, args.input, args.reference)
-        IndexGff = exec.submit(Gffindex, args.features)
+    with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
+        IndexDF = xc.submit(BuildIndex, args.input, args.reference)
+        IndexGff = xc.submit(Gffindex, args.features)
 
         IndexDF = IndexDF.result()
         IndexGff = IndexGff.result()
@@ -213,15 +212,9 @@ def main():
     GffDF = IndexGff.df
     GffDict = GffDF.to_dict("index")
 
-    with cf.ThreadPoolExecutor(max_workers=args.threads) as exec:
+    with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
         if args.depth_of_coverage is not None:
-            exec.submit(BuildCoverage, indexDict, args.depth_of_coverage)
-
-        UpdatedGFF = exec.submit(UpdateGFF, 1, indexDict, bam, GffDict)
-        UpdatedGFF = UpdatedGFF.result()
-
-        if args.output_gff is not None:
-            exec.submit(WriteGFF, GffHeader, UpdatedGFF, args.output_gff)
+            xc.submit(BuildCoverage, indexDict, args.depth_of_coverage)
 
     if args.noambiguity is False:
         IncludeAmbig = True
@@ -232,16 +225,18 @@ def main():
         WriteOutputs,
         args.coverage_levels,
         indexDict,
-        UpdatedGFF,
+        GffDict,
         args.input,
         IncludeAmbig,
         args.variants,
         args.samplename,
         args.reference,
+        args.output_gff,
+        GffHeader,
         args.output,
         args.threads,
     )
-    pass
+
 
 
 def parallel(
@@ -254,6 +249,8 @@ def parallel(
     WriteVCF,
     name,
     ref,
+    gffoutdir,
+    gffheader,
     outdir,
     workers,
 ):
@@ -267,7 +264,9 @@ def parallel(
         WriteVCF,
         name,
         ref,
+        gffoutdir,
+        gffheader,
         outdir,
         pm_processes=workers,
     )
-    pass
+

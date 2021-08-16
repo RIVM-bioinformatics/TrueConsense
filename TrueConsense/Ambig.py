@@ -78,7 +78,7 @@ def GetPercentages(c1, c2, c3, c4, cov):
 
 
 def AmbiguityType(p1, p2, p3, p4):
-    maxdistance = 3
+    maxdistance = 10
     if (abs(p1 - p2)) <= maxdistance:
         if (abs(p1 - p3)) <= maxdistance and (abs(p2 - p3)) <= maxdistance:
             if (
@@ -96,9 +96,19 @@ def AmbiguityType(p1, p2, p3, p4):
     return AType
 
 
-def IsAmbiguous(nuc1, nuc2, nuc3, nuc4, count1, count2, count3, count4, cov):
+def unpack(q):
+    return q[0], q[1]
+
+
+def IsAmbiguous(one, two, three, four, cov):
     if cov == 0:
         return False, None
+
+    nuc1, count1 = unpack(one)
+    nuc2, count2 = unpack(two)
+    nuc3, count3 = unpack(three)
+    nuc4, count4 = unpack(four)
+
     if nuc1 == "X" or nuc2 == "X":
         return False, None
     p1, p2, p3, p4 = GetPercentages(count1, count2, count3, count4, cov)
