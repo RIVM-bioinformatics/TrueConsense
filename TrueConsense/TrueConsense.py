@@ -238,7 +238,6 @@ def main():
     )
 
 
-
 def parallel(
     function,
     covlist,
@@ -269,4 +268,3 @@ def parallel(
         outdir,
         pm_processes=workers,
     )
-
