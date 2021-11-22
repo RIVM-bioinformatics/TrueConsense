@@ -387,7 +387,8 @@
 <li>The samplename</li>
 </ul>
 <h2 id="basic-usage-example">Basic usage example<a class="headerlink" href="#basic-usage-example" title="Permanent link">&para;</a></h2>
-<p>In TrueConsense, the <code>--output</code>/<code>-o</code> flag corresponds to an <strong>output directory</strong> instead of a single file. This is because TrueConsense can create multiple consensus-sequences at the same time. These various consensus-sequences will then be generated in the given output directory.
+<p>In TrueConsense, the <code>--output</code>/<code>-o</code> flag corresponds to an <strong>output directory</strong> instead of a single file.<br />
+This is because TrueConsense can create multiple consensus-sequences at the same time. These various consensus-sequences will then be generated in the given output directory.<br />
 It's also necessary to provide the samplename to TrueConsense as the output consensus-sequence will follow a format as <code>{SAMPLENAME}_cov_ge_{COVERAGE_THRESHOLD}.fa</code> where <code>{SAMPLENAME}</code> and <code>{COVEREAGE_THRESHOLD}</code> will be replaced by the given information.</p>
 <p>When running TrueConsense, it's generally best to provide the same amount of threads as the various coverage-thresholds you wish to generate. For example: if you wish to generate consensus-sequences at thresholds 1, 5, and 10, then it's best to also provide 3 threads.</p>
 <p><strong>Example 1</strong>: Create a consensus-sequence at coverage-thresholds 1, 5, and 10. Using 3 threads.
