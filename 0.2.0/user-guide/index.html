@@ -411,15 +411,16 @@ example_cov_ge_10.fa
 <details class="summary"><summary>Generating a coverage overview</summary><p>TrueConsense can generate a per-position depth-of-coverage overview that you can use in a downstream analysis.<br />
 This file can be generated with the <code>--depth-of-coverage</code>/<code>-doc</code> flag, the output will be provided in TSV format.</p>
 <p><strong>Example:</strong>
-```bash
-trueconsense \
-    --input input.bam \
-    --reference reference.fasta \
-    --features reference-features.gff \
-    --samplename example \
-    --output test_output \
-    -doc
-    --threads 3</p>
+<div class="highlight"><pre><span></span><code>trueconsense <span class="se">\</span>
+    --input input.bam <span class="se">\</span>
+    --reference reference.fasta <span class="se">\</span>
+    --features reference-features.gff <span class="se">\</span>
+    --samplename example <span class="se">\</span>
+    --output test_output <span class="se">\</span>
+    --coverage-levels <span class="m">1</span> <span class="m">5</span> <span class="m">10</span> <span class="se">\</span>
+    --depth-of-coverage example_coverage.tsv <span class="se">\</span>
+    --threads <span class="m">3</span>
+</code></pre></div></p>
 </details>
                 
               
