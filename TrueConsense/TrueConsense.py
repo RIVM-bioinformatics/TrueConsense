@@ -13,7 +13,7 @@ import parmap
 
 from .Coverage import BuildCoverage
 from .func import MyHelpFormatter, color
-from .indexing import BuildIndex, Gffindex, Readbam
+from .indexing import BuildIndex, Gffindex, Readbam, read_override_index, Override_index_positions
 from .Outputs import WriteOutputs
 from .version import __version__
 
@@ -51,6 +51,18 @@ def GetArgs(givenargs):
                 parser.error(
                     f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a GFF file."
                 )
+            return fname
+        else:
+            print(f'"{fname}" is not a file. Exiting...')
+            sys.exit(1)
+    
+    def check_index_override(fname):
+        if os.path.isfile(fname):
+            ext = "".join(pathlib.Path(fname).suffixes)
+            if ".csv" not in ext:
+                parser.error(f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a compressed csv file.")
+            if ".gz" not in ext:
+                parser.error(f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a compressed csv file.")
             return fname
         else:
             print(f'"{fname}" is not a file. Exiting...')
@@ -168,6 +180,13 @@ def GetArgs(givenargs):
         action="store_true",
         help="Turn off ambiguity nucleotides in the generated consensus sequence",
     )
+    
+    opts.add_argument(
+        "--index-override",
+        type=lambda s: check_index_override(s),
+        metavar="File",
+        help="Override the positional index of certain genome positions with 'known' information if the given alignment is not sufficient for these positions\nMust be a compressed csv.\nPlease use with caution as this will overwrite the generated index at the given positions!\n"
+    )
 
     opts.add_argument(
         "--version",
@@ -189,7 +208,6 @@ def GetArgs(givenargs):
 
     return args
 
-
 def main():
     if len(sys.argv[1:]) < 1:
         print(
@@ -206,7 +224,11 @@ def main():
 
         IndexDF = IndexDF.result()
         IndexGff = IndexGff.result()
+    
 
+    if args.index_override:
+        IndexDF = Override_index_positions(IndexDF, read_override_index(args.index_override))
+    
     indexDict = IndexDF.to_dict("index")
     GffHeader = IndexGff.header
     GffDF = IndexGff.df
