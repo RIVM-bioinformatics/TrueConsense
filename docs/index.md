@@ -1,3 +1,12 @@
+---
+hide:
+  - navigation
+  - toc
+---
+
+[![CodeFactor](https://www.codefactor.io/repository/github/rivm-bioinformatics/trueconsense/badge)](https://www.codefactor.io/repository/github/rivm-bioinformatics/trueconsense)
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/RIVM-bioinformatics/TrueConsense?include_prereleases)
+![GitHub](https://img.shields.io/github/license/RIVM-bioinformatics/TrueConsense)
 # TrueConsense
 
 TrueConsense is a nucleotide consensus caller capable of creating a biologically valid consensus-sequence in reference-based virus sequencing experiments.

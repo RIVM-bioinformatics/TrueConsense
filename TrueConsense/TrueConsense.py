@@ -62,7 +62,7 @@ def GetArgs(givenargs):
     parser = argparse.ArgumentParser(
         prog="TrueConsense",
         usage="%(prog)s [required options] [optional arguments]",
-        description="TrueConsense: Creating biologically correct consensus sequences from reference-based alignments",
+        description="TrueConsense: Creating biologically valid consensus sequences from reference-based alignments",
         formatter_class=MyHelpFormatter,
         add_help=False,
     )
