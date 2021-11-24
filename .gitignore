@@ -141,5 +141,5 @@ notes.txt
 *.vcf
 *.bam*
 *.fasta.fai
-*.txt
+tests.txt
 *.csv
