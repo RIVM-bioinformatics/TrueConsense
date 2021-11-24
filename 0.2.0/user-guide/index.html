@@ -356,6 +356,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    Limitations
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -452,6 +459,12 @@ This is done to make sure the generated consensus-sequence is possible when it c
     --threads <span class="m">3</span>
 </code></pre></div></p>
 </details>
+<p>TrueConsense calls IUPAC nucleotide ambiguity-codes by default when an aligned-position has an even (or near-even) split of nucleotides.<br />
+This can be turned off by providing the <code>--noambiguity</code>/<code>-noambig</code> flag. Please note that this will cause TrueConsense to choose the most prominent nucleotide on a split-position, if the split is <em>exactly</em> even on such a position then a random choice will be made between the two (or three) possibilities.</p>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<p>TrueConsense only works with alignments in BAM-format as an input. Other inputs such as SAM or CRAM are currently not supported.</p>
+<p>Additionally, the generated VCF-files are formatted in a way that they can be used to reconstruct the consensus-sequence when sharing the VCF files with other researchers/institutes/etc with a tool such as <code>bcftools consensus</code>. That also means that these VCF-files may not <em>always</em> follow the specifications for VCF-files, for example when ambiguity nucleotides are present in the VCF file.
+The generated VCF-files are made in a way that a tool such as <code>bcftools</code> can use it, but these VCF-files may not always work in other tools such as IGV.</p>
                 
               
               
