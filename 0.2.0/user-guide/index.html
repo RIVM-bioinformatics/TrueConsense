@@ -397,7 +397,7 @@ This is because TrueConsense can create multiple consensus-sequences at the same
     --reference reference.fasta <span class="se">\</span>
     --features reference-features.gff <span class="se">\</span>
     --samplename example <span class="se">\</span>
-    --output test_output <span class="se">\</span>
+    --output test_output/ <span class="se">\</span>
     --coverage-levels <span class="m">1</span> <span class="m">5</span> <span class="m">10</span> <span class="se">\</span>
     --threads <span class="m">3</span>
 </code></pre></div></p>
@@ -416,7 +416,7 @@ This file can be generated with the <code>--depth-of-coverage</code>/<code>-doc<
     --reference reference.fasta <span class="se">\</span>
     --features reference-features.gff <span class="se">\</span>
     --samplename example <span class="se">\</span>
-    --output test_output <span class="se">\</span>
+    --output test_output/ <span class="se">\</span>
     --coverage-levels <span class="m">1</span> <span class="m">5</span> <span class="m">10</span> <span class="se">\</span>
     --depth-of-coverage example_coverage.tsv <span class="se">\</span>
     --threads <span class="m">3</span>
@@ -431,9 +431,24 @@ With this, you can easily generate the various VCF-files in case a downstream an
     --reference reference.fasta <span class="se">\</span>
     --features reference-features.gff <span class="se">\</span>
     --samplename example <span class="se">\</span>
-    --output test_output <span class="se">\</span>
+    --output test_output/ <span class="se">\</span>
     --coverage-levels <span class="m">1</span> <span class="m">5</span> <span class="m">10</span> <span class="se">\</span>
-    --variants vcf_output <span class="se">\</span>
+    --variants vcf_output/ <span class="se">\</span>
+    --threads <span class="m">3</span>
+</code></pre></div></p>
+</details>
+<details class="summary"><summary>Generating updated GFF files per coverage threshold</summary><p>TrueConsense keeps track of the open reading frames given in the input-gff and determines new stop-positions and/or new start-positions when applicable for every open reading frame in the input.<br />
+This is done to make sure the generated consensus-sequence is possible when it comes to virus-biology.  </p>
+<p>The updated GFF-files can be generated with the <code>--output-gff</code>/<code>-ogff</code> flag, this flag corresponds to an <strong>output directory</strong> and not a single file. The generated files follow the same naming structure as the normal consensus-sequences.</p>
+<p><strong>Example:</strong>
+<div class="highlight"><pre><span></span><code>trueconsense <span class="se">\</span>
+    --input input.bam <span class="se">\</span>
+    --reference reference.fasta <span class="se">\</span>
+    --features reference-features.gff <span class="se">\</span>
+    --samplename example <span class="se">\</span>
+    --output test_output/ <span class="se">\</span>
+    --coverage-levels <span class="m">1</span> <span class="m">5</span> <span class="m">10</span> <span class="se">\</span>
+    --output-gff gff_output/ <span class="se">\</span>
     --threads <span class="m">3</span>
 </code></pre></div></p>
 </details>
