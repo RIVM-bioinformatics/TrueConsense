@@ -110,3 +110,17 @@ TrueConsense only works with alignments in BAM-format as an input. Other inputs 
 
 Additionally, the generated VCF-files are formatted in a way that they can be used to accurately reconstruct the consensus-sequence when sharing the VCF files with other researchers/institutes/etc with a tool such as `bcftools consensus`. That also means that these VCF-files may not *always* follow the specifications for VCF-files, for example when ambiguity nucleotides are present in the VCF-file.  
 The generated VCF-files are made in a way that a tool such as `bcftools` can use it, but these VCF-files may not always work in other tools such as IGV.
+
+TrueConsense can only compensate for common alignment artefacts to a certain degree and does so based on the index that TrueConsense makes which contains a distribution of  "nucleotide events" per column of the alignment.  
+There are some edge-cases where the alignment cannot be done without introducing an artefact which cannot be compensated by TrueConsense as information will not be included by the aligner on certain positions.  
+In this case, the index on these positions can be overwritten with an index made in an earlier stage of analysis.  
+This can be done with the `--index-override` flag, the data must be provided as a compressed CSV (.csv.gz) file. Below is an example of the necessary format, where "X" is deletions and "I" is number of reads with an insertion. The first column (position) has no header.  
+
+||coverage                     |A     |T                                            |C  |G  |X  |I  |
+|------|-----------------------|------|---------------------------------------------|---|---|---|---|
+|1     |1                      |2     |7                                            |3  |5  |1  |3  |
+|2     |1                      |2     |3                                            |4  |10 |0  |0  |
+
+!!! warning "Please only use this when absolutely necessary"
+    Using the index override may solve a very specific issue for you particular analysis, but it will also cause the result to be much harder to validate.  
+    Additionally, this may introduce new issues as there is little to no validation of the override-data which will be handled as "truthful" data.
