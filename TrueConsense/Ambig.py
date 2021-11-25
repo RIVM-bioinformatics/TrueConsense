@@ -116,15 +116,13 @@ def IsAmbiguous(one, two, three, four, cov):
 
     if AmbigCombination is None:
         return False, None
-    else:
-        if AmbigCombination == 4:
+    if AmbigCombination == 4:
+        return True, "N"
+    if AmbigCombination == 3:
+        if any(n == "X" for n in [nuc1, nuc2, nuc3]) is True:
             return True, "N"
-        if AmbigCombination == 3:
-            if any(n == "X" for n in [nuc1, nuc2, nuc3]) is True:
-                return True, "N"
-            else:
-                char = TripletAmbigs(nuc1, nuc2, nuc3)
-                return True, char
-        if AmbigCombination == 2:
-            char = DoubleAmbigs(nuc1, nuc2)
-            return True, char
+        char = TripletAmbigs(nuc1, nuc2, nuc3)
+        return True, char
+    if AmbigCombination == 2:
+        char = DoubleAmbigs(nuc1, nuc2)
+        return True, char

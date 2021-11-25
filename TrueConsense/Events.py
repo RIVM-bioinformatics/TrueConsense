@@ -24,8 +24,7 @@ def ListInserts(iDict, mincov, bam):
             positions[k][insertsize] = InsNuc
     if not positions:
         return False, None
-    else:
-        return True, positions
+    return True, positions
 
 
 def ExtractInserts(bam, position):
@@ -47,8 +46,7 @@ def ExtractInserts(bam, position):
             bases = match.group(2)
             insertsize = match.group(1)
             return bases, insertsize
-        else:
-            return None, None
+        return None, None
     return None, None
 
 

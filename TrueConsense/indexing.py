@@ -12,6 +12,15 @@ def Gffindex(file):
     return gffpd.read_gff3(file)
 
 
+def read_override_index(f):
+    return pd.read_csv(f, sep=",", compression="gzip", index_col=0)
+
+
+def Override_index_positions(index, override_data):
+    index.loc[override_data.index, :] = override_data[:]
+    return index
+
+
 def BuildIndex(bamfile, ref):
     columns = ["coverage", "A", "T", "C", "G", "X", "I"]
     p_index = pd.DataFrame(columns=columns)
