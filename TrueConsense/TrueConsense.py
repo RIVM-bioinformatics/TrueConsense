@@ -33,9 +33,8 @@ def GetArgs(givenargs):
                     f"Input file {color.YELLOW}({fname}){color.END} doesn't seem to be a BAM-file."
                 )
             return fname
-        else:
-            print(f'"{fname}" is not a file. Exiting...')
-            sys.exit(-1)
+        print(f'"{fname}" is not a file. Exiting...')
+        sys.exit(-1)
 
     def checkfasta(fname):
         allowedexts = [".fasta", ".fa"]
@@ -46,9 +45,8 @@ def GetArgs(givenargs):
                     f"Reference file {color.YELLOW}({fname}){color.END} doesn't seem to be a Fasta-file."
                 )
             return fname
-        else:
-            print(f'"{fname}" is not a file. Exiting...')
-            sys.exit(1)
+        print(f'"{fname}" is not a file. Exiting...')
+        sys.exit(1)
 
     def checkgff(fname):
         if os.path.isfile(fname):
@@ -58,9 +56,8 @@ def GetArgs(givenargs):
                     f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a GFF file."
                 )
             return fname
-        else:
-            print(f'"{fname}" is not a file. Exiting...')
-            sys.exit(1)
+        print(f'"{fname}" is not a file. Exiting...')
+        sys.exit(1)
 
     def check_index_override(fname):
         if os.path.isfile(fname):
@@ -74,9 +71,8 @@ def GetArgs(givenargs):
                     f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a compressed csv file."
                 )
             return fname
-        else:
-            print(f'"{fname}" is not a file. Exiting...')
-            sys.exit(1)
+        print(f'"{fname}" is not a file. Exiting...')
+        sys.exit(1)
 
     def currentpath():
         return os.getcwd()
@@ -96,7 +92,7 @@ def GetArgs(givenargs):
     reqs.add_argument(
         "--input",
         "-i",
-        type=lambda s: checkbam(s),
+        type=checkbam,
         metavar="File",
         help="Input file in BAM format",
         required=True,
@@ -115,7 +111,7 @@ def GetArgs(givenargs):
     reqs.add_argument(
         "--reference",
         "-ref",
-        type=lambda s: checkfasta(s),
+        type=checkfasta,
         metavar="File",
         help="Reference Fasta file",
         required=True,
@@ -124,7 +120,7 @@ def GetArgs(givenargs):
     reqs.add_argument(
         "--features",
         "-gff",
-        type=lambda s: checkgff(s),
+        type=checkgff,
         metavar="File",
         help="File with genome features (GFF)",
         required=True,
@@ -193,7 +189,7 @@ def GetArgs(givenargs):
 
     opts.add_argument(
         "--index-override",
-        type=lambda s: check_index_override(s),
+        type=check_index_override,
         metavar="File",
         help="Override the positional index of certain genome positions with 'known' information if the given alignment is not sufficient for these positions\nMust be a compressed csv.\nPlease use with caution as this will overwrite the generated index at the given positions!\n",
     )

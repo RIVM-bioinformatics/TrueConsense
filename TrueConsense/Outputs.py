@@ -21,7 +21,6 @@ def WriteGFF(gffheader, gffdict, outdir, name, cov):
                 else:
                     out.write(str(nv) + "\t")
             out.write("\n")
-    pass
 
 
 def WriteOutputs(
@@ -133,5 +132,3 @@ def WriteOutputs(
 
     with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{cov}.fa", "w") as out:
         out.write(f">{name}_cov_ge_{cov}\n{consensus}\n")
-
-    pass

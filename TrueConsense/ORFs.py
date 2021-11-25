@@ -27,9 +27,8 @@ def SolveTripletLength(uds, mds):
             ## the minority-del group is also divisible by 3
 
             return True  # return that the minority-del is good to be appended
-        else:
-            ## the minority-del group is not divisible by 3
-            return False  # return that the minority-del should be ignored
+        ## the minority-del group is not divisible by 3
+        return False  # return that the minority-del should be ignored
     else:
         ## the upcoming stretch is NOT divisible by 3 -> the mds should make it so
         if (mdslen + udslen) % 3 == 0:
