@@ -12,7 +12,6 @@ TrueConsense requires Python 3.7 or later to be installed on your system (or in 
 Other dependencies will be installed during the installation, your don't have to install them manually. These extra dependencies are as follows:
 
 * pysam<0.16
-* pysamstats>=1.1.2
 * pandas>=1.2.3
 * gffpandas>=1.2.0
 * parmap>=1.5.2
@@ -46,7 +45,7 @@ You can now install TrueConsense via the following command:
 pip install .
 ```
 
-TrueConsense should now be installed!  
+TrueConsense should now be installed!
 You can verify if installation was successful by typing `trueconsense --version` on the command-line, this should show the installed TrueConsense version.
 
 ## Pipeline/workflow inegration
