@@ -21,7 +21,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         "pysam<0.16",
-        "pysamstats>=1.1.2",
         "pandas>=1.2.3",
         "gffpandas>=1.2.0",
         "parmap>=1.5.2",
