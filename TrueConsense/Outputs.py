@@ -6,7 +6,7 @@ from Bio import SeqIO
 
 from .Coverage import GetCoverage
 from .Events import ListInserts
-from .indexing import Readbam
+from .indexing import BuildIndex, ReadBam, ReadFasta
 from .Sequences import BuildConsensus
 
 
@@ -43,92 +43,90 @@ def WriteOutputs(
     """
     today = date.today().strftime("%Y%m%d")
 
-    bam = Readbam(inputbam)
-    consensus, newgff = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, True)
-    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, False)[
-        0
-    ]
+    p_index = BuildIndex(inputbam, ref)
 
-    if gffout is not None:
-        WriteGFF(gffheader, newgff, gffout, name, cov)
+    consensus = BuildConsensus(p_index, mincov=cov, IncludeAmbig=IncludeAmbig)
 
-    if WriteVCF is not None:
-        hasinserts, insertpositions = ListInserts(iDict, cov, bam)
+    # if gffout is not None:
+    #     WriteGFF(gffheader, newgff, gffout, name, cov)
 
-        q = 0
-        for record in SeqIO.parse(ref, "fasta"):
-            if q != 0:
-                break
-            q += 1
-            refID = record.id
-            reflist = list(record.seq)
+    #     if WriteVCF is not None:
+    #         hasinserts, insertpositions = ListInserts(iDict, cov, bam)
 
-        seqlist = list(consensus_noinsert.upper())
+    #         q = 0
+    #         for record in SeqIO.parse(ref, "fasta"):
+    #             if q != 0:
+    #                 break
+    #             q += 1
+    #             refID = record.id
+    #             reflist = list(record.seq)
 
-        with open(f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{cov}.vcf", "w") as out:
-            out.write(
-                f"""##fileformat=VCFv4.3
-##fileDate={today}
-##source='TrueConsense {' '.join(sys.argv[1:])}'
-##reference='{ref}'
-##contig=<ID={refID}>
-##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
-##INFO=<ID=INDEL,Number=0,Type=Flag,Description="Indicates that the variant is an INDEL.">
-#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
-"""
-            )
-            # writecontents
+    #         seqlist = list(consensus_noinsert.upper())
 
-            delskips = []
-            for i in range(len(reflist)):
-                if i in delskips:
-                    continue
+    #         with open(f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{cov}.vcf", "w") as out:
+    #             out.write(
+    #                 f"""##fileformat=VCFv4.3
+    # ##fileDate={today}
+    # ##source='TrueConsense {' '.join(sys.argv[1:])}'
+    # ##reference='{ref}'
+    # ##contig=<ID={refID}>
+    # ##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+    # ##INFO=<ID=INDEL,Number=0,Type=Flag,Description="Indicates that the variant is an INDEL.">
+    # #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+    # """
+    #             )
+    #             # writecontents
 
-                if reflist[i] != seqlist[i]:
-                    b = i
+    #             delskips = []
+    #             for i in range(len(reflist)):
+    #                 if i in delskips:
+    #                     continue
 
-                    if seqlist[i] == "-":
+    #                 if reflist[i] != seqlist[i]:
+    #                     b = i
 
-                        gapextendedreflist = []
-                        while seqlist[b] == "-":
-                            gapextendedreflist.append(reflist[b])
-                            delskips.append(b)
-                            b += 1
+    #                     if seqlist[i] == "-":
 
-                        gapextension = "".join(gapextendedreflist)
-                        joinedreflist = str(reflist[i - 1] + gapextension)
+    #                         gapextendedreflist = []
+    #                         while seqlist[b] == "-":
+    #                             gapextendedreflist.append(reflist[b])
+    #                             delskips.append(b)
+    #                             b += 1
 
-                        currentcov = GetCoverage(iDict, i + 1)
-                        out.write(
-                            f"{refID}\t{i}\t.\t{joinedreflist}\t{seqlist[i-1]}\t.\tPASS\tDP={currentcov};INDEL\n"
-                        )
-                    else:
-                        if i == 0:
-                            p = 1
-                        elif i == 1:
-                            p = 1
-                        else:
-                            p = i
-                        currentcov = GetCoverage(iDict, p + 1)
-                        out.write(
-                            f"{refID}\t{i+1}\t.\t{reflist[i]}\t{seqlist[i]}\t.\tPASS\tDP={currentcov}\n"
-                        )
-                if hasinserts is True:
-                    for lposition in insertpositions:
-                        if i == lposition:
-                            currentcov = GetCoverage(iDict, i + 1)
-                            if currentcov > cov:
-                                for y in insertpositions.get(lposition):
-                                    to_insert = str(
-                                        insertpositions.get(lposition).get(y)
-                                    )
-                                    if to_insert is not None:
-                                        CombinedEntry = seqlist[i] + to_insert
-                                        out.write(
-                                            f"{refID}\t{i}\t.\t{reflist[i]}\t{CombinedEntry}\t.\tPASS\tDP={currentcov};INDEL\n"
-                                        )
-                                    else:
-                                        continue
+    #                         gapextension = "".join(gapextendedreflist)
+    #                         joinedreflist = str(reflist[i - 1] + gapextension)
+
+    #                         currentcov = GetCoverage(iDict, i + 1)
+    #                         out.write(
+    #                             f"{refID}\t{i}\t.\t{joinedreflist}\t{seqlist[i-1]}\t.\tPASS\tDP={currentcov};INDEL\n"
+    #                         )
+    #                     else:
+    #                         if i == 0:
+    #                             p = 1
+    #                         elif i == 1:
+    #                             p = 1
+    #                         else:
+    #                             p = i
+    #                         currentcov = GetCoverage(iDict, p + 1)
+    #                         out.write(
+    #                             f"{refID}\t{i+1}\t.\t{reflist[i]}\t{seqlist[i]}\t.\tPASS\tDP={currentcov}\n"
+    #                         )
+    #                 if hasinserts is True:
+    #                     for lposition in insertpositions:
+    #                         if i == lposition:
+    #                             currentcov = GetCoverage(iDict, i + 1)
+    #                             if currentcov > cov:
+    #                                 for y in insertpositions.get(lposition):
+    #                                     to_insert = str(
+    #                                         insertpositions.get(lposition).get(y)
+    #                                     )
+    #                                     if to_insert is not None:
+    #                                         CombinedEntry = seqlist[i] + to_insert
+    #                                         out.write(
+    #                                             f"{refID}\t{i}\t.\t{reflist[i]}\t{CombinedEntry}\t.\tPASS\tDP={currentcov};INDEL\n"
+    #                                         )
+    #                                     else:
+    #                                         continue
 
     with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{cov}.fa", "w") as out:
         out.write(f">{name}_cov_ge_{cov}\n{consensus}\n")

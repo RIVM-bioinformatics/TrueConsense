@@ -3,8 +3,12 @@ import pandas as pd
 import pysam
 
 
-def Readbam(f):
+def ReadBam(f):
     return pysam.AlignmentFile(f, "rb")
+
+
+def ReadFasta(f):
+    return pysam.FastaFile(f)
 
 
 def Gffindex(file):
@@ -27,32 +31,19 @@ def BuildIndex(bamfile, ref):
 
     pileup = bamfile.pileup(stepper="nofilter", max_depth=10000000, min_base_quality=0)
 
-    def parse_query_sequences(l):
-        coverage = a = c = t = g = x = i = 0
-        for b in l:
-            coverage += 1
-            if b == "*":
-                x += 1
-            elif b[0].lower() == "a":
-                a += 1
-            elif b[0].lower() == "t":
-                t += 1
-            elif b[0].lower() == "c":
-                c += 1
-            elif b[0].lower() == "g":
-                g += 1
-
-            # It is important to count the insertions seperately
-            if "+" in b:
-                i += 1
-        return coverage, a, t, c, g, x, i
-
-    columns = ["pos", "coverage", "A", "T", "C", "G", "X", "I"]
+    columns = ["pos", "query_sequences"]
 
     # 1 Is added to the position because our index starts at 1
     p_index = pd.DataFrame(
         (
-            (p.pos + 1,) + parse_query_sequences(p.get_query_sequences(add_indels=True))
+            (
+                p.pos,
+                [
+                    call.split("-")[0].replace("*", "-").replace("+", "")
+                    for call in p.get_query_sequences(add_indels=True)
+                    if call
+                ],
+            )
             for p in pileup
         ),
         columns=columns,
@@ -60,11 +51,18 @@ def BuildIndex(bamfile, ref):
 
     # Since the pileup does not return positions without any reads mapped, we have to
     # fill these with zeroes
-    missing_positions = set(range(1, ref_length + 1)) - set(p_index.pos)
+    missing_positions = set(range(0, ref_length)) - set(p_index.pos)
     missing_p_index = pd.DataFrame(
-        ((i, 0, 0, 0, 0, 0, 0, 0) for i in missing_positions), columns=columns
+        ((i, []) for i in missing_positions), columns=columns
     )
     p_index = p_index.append(missing_p_index).set_index("pos").sort_index()
     p_index.index.name = None
 
+    p_index = SupplyIndexWithCounts(p_index)
+
+    return p_index
+
+
+def SupplyIndexWithCounts(p_index):
+    p_index["cov"] = p_index.query_sequences.apply(len)
     return p_index

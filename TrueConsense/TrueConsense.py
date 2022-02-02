@@ -17,7 +17,7 @@ from .indexing import (
     BuildIndex,
     Gffindex,
     Override_index_positions,
-    Readbam,
+    ReadBam,
     read_override_index,
 )
 from .Outputs import WriteOutputs
@@ -222,8 +222,6 @@ def main():
         )
         sys.exit(1)
     args = GetArgs(sys.argv[1:])
-
-    bam = Readbam(args.input)
 
     with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
         IndexDF = xc.submit(BuildIndex, args.input, args.reference)

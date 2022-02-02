@@ -1,9 +1,13 @@
 import copy
+import time
+from itertools import chain
 
 from .Ambig import IsAmbiguous
 from .Coverage import GetCoverage
 from .Events import ListInserts, MinorityDel
 from .ORFs import CorrectGFF, SolveTripletLength, in_orf
+
+import pandas as pd
 
 
 def WalkForward(index, p, fixedpositions="expand"):
@@ -87,158 +91,50 @@ def GetDistribution(iDict, position):
     return dist
 
 
-def BuildConsensus(mincov, iDict, GFFdict, IncludeAmbig, bam, includeINS):
-    cons = []
+def BuildConsensus(p_index, mincov=50, IncludeAmbig=False):
 
-    p_index = complement_index(iDict, GFFdict, [])
+    print(f"Starting Consensus Building")
+    start_time = time.time()
 
-    hasinserts, insertpositions = ListInserts(p_index, mincov, bam)
+    p_index["calls"] = p_index[["query_sequences", "cov"]].apply(
+        lambda l: call_counts(
+            l.name,  # l.name is actually the query postition (the index of the df)
+            l[0],
+            l[1],
+            mincov,
+        ),
+        axis=1,
+    )
+    print(f"Done applying call counts: {time.time() - start_time}")
 
-    dskips = []
+    p_index.calls = p_index.calls.map(sort_highest_score)
 
-    newGffdict = copy.deepcopy(GFFdict)
+    cons = p_index.calls.map(pick_first).map(lambda call: call["seq"] if call else "N")
 
-    for a, b in enumerate(p_index):
+    cons = "".join(cons)
+    print(f"Done Building Consensus: {time.time() - start_time}")
+    return cons
 
-        cov = GetCoverage(p_index, b)
-        within_orf = in_orf(b, newGffdict)
 
-        if b in dskips:
-            cons.append("-")
-            newGffdict = CorrectGFF(
-                GFFdict, newGffdict, cons, b, insertpositions, mincov, cov
-            )
-            continue
+def call_counts(pos, query_sequences, cov, mincov):
+    if len(query_sequences) < mincov:
+        return []
 
-        if cov < mincov:
-            cons.append("N")
-            # Simply add a 'N' to the consensus at this position if the coverage is below the threshold
-            newGffdict = CorrectGFF(
-                GFFdict, newGffdict, cons, b, insertpositions, mincov, cov
-            )
-            continue
-        else:
-            PrimaryN, PrimaryC = GetNucleotide(p_index, b, 1)
-            # get the primary nucleotide at this position
+    counts = pd.Series(query_sequences).str.upper().value_counts()
+    scores = counts / cov
 
-            HasAmbiguity, AmbigChar = IsAmbiguous(
-                GetNucleotide(p_index, b, 1),
-                GetNucleotide(p_index, b, 2),
-                GetNucleotide(p_index, b, 3),
-                GetNucleotide(p_index, b, 4),
-                cov,
-            )
+    return list(
+        dict(pos=pos, seq=seq, n=n, score=score)
+        for seq, n, score in zip(counts.index, counts, scores)
+    )
 
-            if PrimaryN != "X":
 
-                if MinorityDel(p_index, b) is True:
+def sort_highest_score(calls):
+    calls.sort(key=lambda x: x["score"], reverse=True)
+    return calls
 
-                    if not WalkForward(p_index, b):
 
-                        if MinorityDel(p_index, b + 1) is True:
-
-                            if WalkForward(p_index, b + 1):
-
-                                uds = WalkForward(p_index, b + 1)
-                                mds = [b, b + 1]
-                                if SolveTripletLength(uds, mds) is True:
-                                    cons.append("-")
-                                    for x in mds:
-                                        dskips.append(x)
-                                    for x in uds:
-                                        dskips.append(x)
-                                else:
-                                    if IncludeAmbig is True and HasAmbiguity is True:
-                                        cons.append(AmbigChar)
-                                    else:
-                                        if PrimaryC < mincov:
-                                            cons.append(PrimaryN.lower())
-                                        else:
-                                            cons.append(PrimaryN.upper())
-                            else:
-                                if IncludeAmbig is True and HasAmbiguity is True:
-                                    cons.append(AmbigChar)
-                                else:
-                                    if PrimaryC < mincov:
-                                        cons.append(PrimaryN.lower())
-                                    else:
-                                        cons.append(PrimaryN.upper())
-                        else:
-                            if IncludeAmbig is True and HasAmbiguity is True:
-                                cons.append(AmbigChar)
-                            else:
-                                if PrimaryC < mincov:
-                                    cons.append(PrimaryN.lower())
-                                else:
-                                    cons.append(PrimaryN.upper())
-                    else:
-                        uds = WalkForward(p_index, b)
-                        mds = [b]
-                        if SolveTripletLength(uds, mds) is True:
-                            cons.append("-")
-                            dskips.append(b)
-                            for x in uds:
-                                dskips.append(x)
-                        else:
-                            if IncludeAmbig is True and HasAmbiguity is True:
-                                cons.append(AmbigChar)
-                            else:
-                                if PrimaryC < mincov:
-                                    cons.append(PrimaryN.lower())
-                                else:
-                                    cons.append(PrimaryN.upper())
-                else:
-                    if IncludeAmbig is True and HasAmbiguity is True:
-                        cons.append(AmbigChar)
-                    else:
-                        if PrimaryC < mincov:
-                            cons.append(PrimaryN.lower())
-                        else:
-                            cons.append(PrimaryN.upper())
-
-            if PrimaryN == "X":
-                if within_orf is True:
-                    if b in dskips:  # this might be redundant, check later
-                        cons.append("-")
-                    else:
-                        if not WalkForward(p_index, b):
-                            SecondaryN, SecondaryC = GetNucleotide(p_index, b, 2)
-                            if IncludeAmbig is True and HasAmbiguity is True:
-                                cons.append(AmbigChar)
-                            else:
-                                if SecondaryC < mincov:
-                                    cons.append(SecondaryN.lower())
-                                else:
-                                    cons.append(SecondaryN.upper())
-                        else:
-                            wfds = WalkForward(p_index, b)
-                            if len(wfds) >= 2:
-                                cons.append("-")
-                                dskips.append(b)
-                                for x in wfds:
-                                    dskips.append(x)
-                            else:
-                                SecondaryN, SecondaryC = GetNucleotide(p_index, b, 2)
-                                if IncludeAmbig is True and HasAmbiguity is True:
-                                    cons.append(AmbigChar)
-                                else:
-                                    if SecondaryC < mincov:
-                                        cons.append(SecondaryN.lower())
-                                    else:
-                                        cons.append(SecondaryN.upper())
-                else:
-                    cons.append("-")
-
-        if includeINS is True:
-            if cov > mincov:
-                if hasinserts is True:
-                    for x in insertpositions:
-                        if b == x:
-                            for i in insertpositions.get(x):
-                                cons.append(str(insertpositions.get(x).get(i)))
-
-        newGffdict = CorrectGFF(
-            GFFdict, newGffdict, cons, b, insertpositions, mincov, cov
-        )
-
-    return "".join(cons), newGffdict
+def pick_first(calls):
+    if not calls:
+        return None
+    return calls[0]
