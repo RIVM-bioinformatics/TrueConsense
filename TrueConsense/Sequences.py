@@ -93,8 +93,7 @@ def GetDistribution(iDict, position):
     return dist
 
 
-def BuildConsensus(p_index, mincov=50, IncludeAmbig=False):
-
+def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
     print(f"Starting Consensus Building")
     start_time = time.time()
 
@@ -123,23 +122,26 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False):
     ]
     alt_calls.sort(key=lambda call: call["rel_score"], reverse=True)
 
-    orf1a = score_orf(p_index, 266, 13468)
-    for combination in significant_combinations_of_mutations(
-        [c for c in alt_calls if 266 <= c["pos"] <= 13468]
-    ):
-        if orf1a > 0.99:
-            break
+    for _, feature in gff_df.iterrows():
+        feature_score = score_feature(p_index, feature)
+        print(f"Fixing {feature.Name} with score {feature_score}")
 
-        previous_calls = insert_calls(p_index, combination)
-        new_orf1a = score_orf(p_index, 266, 13468)
-        if new_orf1a > orf1a:
-            print(f"Fixed with {combination}")
-            orf1a = new_orf1a
-        else:
-            insert_calls(p_index, previous_calls)
+        for new_calls in significant_combinations_of_mutations(
+            [c for c in alt_calls if feature.start <= c["pos"] <= feature.end]
+        ):
+            if feature_score > 0.99:
+                break
 
-    print(f"Final score of orf1a is {orf1a}")
-    print(f"Done fixing orf1a: {time.time() - start_time}")
+            previous_calls = insert_calls(p_index, new_calls)
+            new_feature_score = score_feature(p_index, feature)
+            if new_feature_score > feature_score:
+                print(f"Fixed with {new_calls} in place of {previous_calls}")
+                feature_score = new_feature_score
+            else:
+                insert_calls(p_index, previous_calls)
+        print(f"Final score of {feature.Name} is {feature_score}")
+    print(f"Done fixing features: {time.time() - start_time}")
+
     start_time = time.time()
 
     cons = p_index.picked_call.map(lambda call: call["seq"] if call else "N")
@@ -186,14 +188,14 @@ def sort_highest_score(calls):
     return calls
 
 
-def score_orf(p_index, start, stop, stops_with_codon=True, starts_with_atg=True):
+def score_feature(p_index, feature, ends_with_stop_codon=True, starts_with_atg=True):
     out_of_frame_counter = 0
     in_frame_counter = 0
 
     frame_offset = 0
-    for call in p_index[start:stop]["picked_call"]:
+    for call in p_index[feature.start:feature.end]["picked_call"]:
         if not call:  # If there is an N
-            # TODO: fix if there is a framshift (insertion or deletion) after a stretch of N's. This ins or del could shift the frame right in stead of wrong.
+            # TODO: fix if there is a framshift (insertion or deletion) after a stretch of N's. An ins or del could shift the frame in step, in stead of out of step.
             frame_offset = 0  # Assume you are back in frame if insuffiecient info
             continue
         seq = call["seq"]
@@ -237,3 +239,6 @@ def insert_calls(p_index, calls):
         list_of_originals.append(p_index.at[call["pos"], "picked_call"])
         p_index.at[call["pos"], "picked_call"] = call
     return list_of_originals
+
+def fix_feature(p_index, feature, alternative_calls):
+    pass

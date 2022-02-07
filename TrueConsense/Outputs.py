@@ -34,6 +34,7 @@ def WriteOutputs(
     ref,
     gffout,
     gffheader,
+    gff_df,
     outdir,
 ):
     """
@@ -45,7 +46,7 @@ def WriteOutputs(
 
     p_index = BuildIndex(inputbam, ref)
 
-    consensus = BuildConsensus(p_index, mincov=cov, IncludeAmbig=IncludeAmbig)
+    consensus = BuildConsensus(p_index, mincov=cov, IncludeAmbig=IncludeAmbig, gff_df=gff_df)
 
     # if gffout is not None:
     #     WriteGFF(gffheader, newgff, gffout, name, cov)

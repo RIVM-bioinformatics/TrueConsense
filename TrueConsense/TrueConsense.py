@@ -261,10 +261,10 @@ def main():
         args.reference,
         args.output_gff,
         GffHeader,
+        IndexGff.attributes_to_columns(), # This is a dataframe of the gff
         args.output,
         args.threads,
     )
-
 
 def parallel(
     function,
@@ -278,6 +278,7 @@ def parallel(
     ref,
     gffoutdir,
     gffheader,
+    IndexGff,
     outdir,
     workers,
 ):
@@ -293,6 +294,7 @@ def parallel(
         ref,
         gffoutdir,
         gffheader,
+        IndexGff,
         outdir,
         pm_processes=workers,
     )
