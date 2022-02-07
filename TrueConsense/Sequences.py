@@ -1,6 +1,8 @@
 import copy
 import time
-from itertools import chain
+from itertools import *
+from collections import Counter
+import numpy as np
 
 from .Ambig import IsAmbiguous
 from .Coverage import GetCoverage
@@ -106,10 +108,41 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False):
         axis=1,
     )
     print(f"Done applying call counts: {time.time() - start_time}")
+    start_time = time.time()
 
-    p_index.calls = p_index.calls.map(sort_highest_score)
+    p_index["calls"] = p_index.calls.map(sort_highest_score)
+    p_index["picked_call"] = p_index["calls"].map(lambda c: c[0] if c else None)
 
-    cons = p_index.calls.map(pick_first).map(lambda call: call["seq"] if call else "N")
+    # The significance is the minimal relative score that (combinations of) mutations need to have before being considered.
+    significance = 0.5
+    alt_calls = [
+        alt_call
+        for alt_calls in p_index.calls
+        for alt_call in alt_calls[1:]
+        if alt_call["rel_score"] > significance
+    ]
+    alt_calls.sort(key=lambda call: call["rel_score"], reverse=True)
+
+    orf1a = score_orf(p_index, 266, 13468)
+    for combination in significant_combinations_of_mutations(
+        [c for c in alt_calls if 266 <= c["pos"] <= 13468]
+    ):
+        if orf1a > 0.99:
+            break
+
+        previous_calls = insert_calls(p_index, combination)
+        new_orf1a = score_orf(p_index, 266, 13468)
+        if new_orf1a > orf1a:
+            print(f"Fixed with {combination}")
+            orf1a = new_orf1a
+        else:
+            insert_calls(p_index, previous_calls)
+
+    print(f"Final score of orf1a is {orf1a}")
+    print(f"Done fixing orf1a: {time.time() - start_time}")
+    start_time = time.time()
+
+    cons = p_index.picked_call.map(lambda call: call["seq"] if call else "N")
 
     cons = "".join(cons)
     print(f"Done Building Consensus: {time.time() - start_time}")
@@ -120,12 +153,31 @@ def call_counts(pos, query_sequences, cov, mincov):
     if len(query_sequences) < mincov:
         return []
 
-    counts = pd.Series(query_sequences).str.upper().value_counts()
+    counts = pd.Series(Counter(map(str.upper, query_sequences)))
+
     scores = counts / cov
 
+    # This is (kind of) the probability that you would choose the alternative call(s) over the most occuring call(s).
+    # e.g. there are 5 calls for the nucleotide C, and 3 for T. The relative score for C is 1.0 and for T 3/5=0.6.
+    # These relative scores multiply in case of combinations of mutations.
+    relative_scores = counts / max(counts)
+
     return list(
-        dict(pos=pos, seq=seq, n=n, score=score)
-        for seq, n, score in zip(counts.index, counts, scores)
+        dict(
+            pos=pos,
+            seq=seq,
+            n=n,
+            score=score,
+            rel_score=rel_score,
+            index=index,
+        )
+        for seq, n, score, rel_score, index in zip(
+            counts.index,
+            counts,
+            scores,
+            relative_scores,
+            range(len(counts)),
+        )
     )
 
 
@@ -134,7 +186,54 @@ def sort_highest_score(calls):
     return calls
 
 
-def pick_first(calls):
-    if not calls:
-        return None
-    return calls[0]
+def score_orf(p_index, start, stop, stops_with_codon=True, starts_with_atg=True):
+    out_of_frame_counter = 0
+    in_frame_counter = 0
+
+    frame_offset = 0
+    for call in p_index[start:stop]["picked_call"]:
+        if not call:  # If there is an N
+            # TODO: fix if there is a framshift (insertion or deletion) after a stretch of N's. This ins or del could shift the frame right in stead of wrong.
+            frame_offset = 0  # Assume you are back in frame if insuffiecient info
+            continue
+        seq = call["seq"]
+        if seq == "-":
+            frame_offset = frame_offset - 1
+            continue
+
+        if frame_offset % 3:  # If the offset is not a multiple of 3
+            out_of_frame_counter += len(seq)
+        else:
+            in_frame_counter += len(seq)
+
+        if len(seq) > 1:
+            frame_offset = frame_offset + len(seq)
+
+    score = in_frame_counter / (in_frame_counter + out_of_frame_counter)
+    return score
+
+
+def significant_combinations_of_mutations(ms, significance=0.5):
+    key = lambda x: x["rel_score"]
+    ms = sorted(ms, reverse=True, key=key)
+
+    def score(l):
+        return np.prod(list(map(key, l)))
+
+    def pred(l):
+        return score(l) > significance
+
+    its = []
+    for combination_of_length in map(
+        lambda n: combinations(ms, n), range(1, len(ms) + 1)
+    ):
+        its.append(takewhile(pred, combination_of_length))
+    return sorted(chain(*its), reverse=True, key=score)
+
+
+def insert_calls(p_index, calls):
+    list_of_originals = []
+    for call in calls:
+        list_of_originals.append(p_index.at[call["pos"], "picked_call"])
+        p_index.at[call["pos"], "picked_call"] = call
+    return list_of_originals
