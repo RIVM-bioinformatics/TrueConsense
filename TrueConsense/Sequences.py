@@ -226,7 +226,7 @@ def score_feature(p_index, feature, ends_with_stop_codon=True, starts_with_atg=T
         position_in_codon = (position_in_codon + len(seq)) % 3
 
         if len(seq) > 1:
-            frame_offset = frame_offset + len(seq)
+            frame_offset = frame_offset + len(seq) - 1
 
     score = in_frame_counter / (in_frame_counter + out_of_frame_counter)
     return score
