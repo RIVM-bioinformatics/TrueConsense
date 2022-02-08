@@ -68,9 +68,9 @@ def BuildIndex(bamfile, ref):
     print(f"Done filling missing positions in pileup: {time.time() - start_time}")
     start_time = time.time()
 
-    p_index = SupplyIndexWithCounts(p_index)
-    print(f"Done supplying coverage levels: {time.time() - start_time}")
-    start_time = time.time()
+    # p_index = SupplyIndexWithCounts(p_index)
+    # print(f"Done supplying coverage levels: {time.time() - start_time}")
+    # start_time = time.time()
 
     return p_index
 
