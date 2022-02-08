@@ -40,7 +40,7 @@ def BuildIndex(bamfile, ref):
 
     columns = ["pos", "query_sequences"]
     # 1 Is added to the position because our index starts at 1
-    translate_table = str.maketrans("*","-","+0123456789")
+    translate_table = str.maketrans("*", "-", "+0123456789")
     p_index = pd.DataFrame(
         (
             (

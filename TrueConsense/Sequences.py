@@ -101,9 +101,10 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
     p_index["calls"] = p_index[["query_sequences"]].apply(
         lambda l: call_counts(
             l.name,  # l.name is actually the query postition (the index of the df)
-            l['query_sequences'],
+            l["query_sequences"],
             mincov,
-        ), axis=1
+        ),
+        axis=1,
     )
     print(f"Done determining call counts: {time.time() - start_time}")
     start_time = time.time()
@@ -127,18 +128,23 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
 
         best_calls = []
         for new_calls in significant_combinations_of_mutations(
-            [c for c in alt_calls if feature.start <= c["pos"] <= feature.end], significance=significance
+            [c for c in alt_calls if feature.start <= c["pos"] <= feature.end],
+            significance=significance,
         ):
             if feature_score > 0.99:
                 break
 
             previous_calls = insert_calls(p_index, new_calls)
             new_feature_score = score_feature(p_index, feature)
-            if new_feature_score > feature_score: # TODO: Add weighing of the alternative calls to the importance of the feature
-                print(f"Fixed to score of {new_feature_score} with {new_calls} in place of {previous_calls}")
+            if (
+                new_feature_score > feature_score
+            ):  # TODO: Add weighing of the alternative calls to the importance of the feature
+                print(
+                    f"Fixed to score of {new_feature_score} with {new_calls} in place of {previous_calls}"
+                )
                 feature_score = new_feature_score
                 best_calls = new_calls
-            insert_calls(p_index, previous_calls) # restore to default
+            insert_calls(p_index, previous_calls)  # restore to default
         insert_calls(p_index, best_calls)
         print(f"Final score of {feature.Name} is {feature_score}")
     print(f"Done fixing features: {time.time() - start_time}")
@@ -196,14 +202,16 @@ def score_feature(p_index, feature, ends_with_stop_codon=True, starts_with_atg=T
 
     encountered_stop = False
     frame_offset = 0
-    position_in_codon=0
+    position_in_codon = 0
     last_two_nucs = ""
-    for i, call in enumerate(p_index[feature.start-1:feature.end]["picked_call"]):
+    for i, call in enumerate(p_index[feature.start - 1 : feature.end]["picked_call"]):
         if not call:  # If there is an N
             # TODO: fix if there is a framshift (insertion or deletion) after a stretch of N's. An ins or del could shift the frame in step, in stead of out of step.
             frame_offset = 0  # Assume you are back in frame if insuffiecient info
             last_two_nucs = ""
-            position_in_codon = (i+1) % 3 # Reset the position in codon to be in phase
+            position_in_codon = (
+                i + 1
+            ) % 3  # Reset the position in codon to be in phase
             continue
 
         seq = call["seq"]
@@ -213,15 +221,17 @@ def score_feature(p_index, feature, ends_with_stop_codon=True, starts_with_atg=T
 
         seq_with_prev = last_two_nucs + seq
         last_two_nucs = seq_with_prev[-2:]
-        codons = chunks(seq_with_prev[2-position_in_codon:], 3)
+        codons = chunks(seq_with_prev[2 - position_in_codon :], 3)
         for codon in codons:
             if len(codon) == 3:
-                if encountered_stop or frame_offset % 3:  # If the offset is not a multiple of 3
+                if (
+                    encountered_stop or frame_offset % 3
+                ):  # If the offset is not a multiple of 3
                     out_of_frame_counter += 1
                 else:
                     in_frame_counter += 1
                     if codon in ["TAA", "TGA", "TAG"]:
-                        encountered_stop=True
+                        encountered_stop = True
 
         position_in_codon = (position_in_codon + len(seq)) % 3
 
@@ -257,9 +267,11 @@ def insert_calls(p_index, calls):
         p_index.at[call["pos"], "picked_call"] = call
     return list_of_originals
 
+
 def fix_feature(p_index, feature, alternative_calls):
     pass
 
+
 def chunks(l, n):
     for i in range(0, len(l), n):
-        yield l[i:i + n]
+        yield l[i : i + n]
