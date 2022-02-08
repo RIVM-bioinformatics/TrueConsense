@@ -134,7 +134,7 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
 
             previous_calls = insert_calls(p_index, new_calls)
             new_feature_score = score_feature(p_index, feature)
-            if new_feature_score > feature_score:
+            if new_feature_score > feature_score: # TODO: Add weighing of the alternative calls to the importance of the feature
                 print(f"Fixed to score of {new_feature_score} with {new_calls} in place of {previous_calls}")
                 feature_score = new_feature_score
                 best_calls = new_calls
