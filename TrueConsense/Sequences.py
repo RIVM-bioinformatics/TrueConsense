@@ -127,7 +127,7 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
 
         best_calls = []
         for new_calls in significant_combinations_of_mutations(
-            [c for c in alt_calls if feature.start <= c["pos"] <= feature.end]
+            [c for c in alt_calls if feature.start <= c["pos"] <= feature.end], significance=significance
         ):
             if feature_score > 0.99:
                 break
