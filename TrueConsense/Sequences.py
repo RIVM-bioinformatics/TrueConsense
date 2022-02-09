@@ -1,8 +1,5 @@
-import copy
 import time
 from itertools import *
-from collections import Counter
-from turtle import position
 import numpy as np
 
 from .Ambig import IsAmbiguous
@@ -174,34 +171,29 @@ def call_counts(pos, query_sequences, mincov):
     cov = len(query_sequences)
     if cov < mincov:
         return []
-    counts = pd.Series(Counter(map(str.upper, query_sequences)))
-    scores = counts / cov
+
+    # This method of counting is faster than the built in collections.Counter class
+    queries_without_strand = list(map(str.upper, query_sequences))
+    unique_queries = set(queries_without_strand)
+    counts = [queries_without_strand.count(q) for q in unique_queries]
+    max_count = max(counts)
 
     # TODO: Add strand bias as a metric.
     # TODO: Consider insertions seperately from nucleotide calls. The first base of the insertion call is not considered in the count of that particular base.
 
-    # The relative score is the probability that you would choose the alternative call(s) over the most occuring call(s).
-    # e.g. there are 5 calls for the nucleotide C, and 3 for T. The relative score for C is 1.0 and for T 3/5=0.6.
-    # The particularities of these relative scores make that they multiply in case of combinations of mutations.
-    relative_scores = counts / max(counts)
-
-    return list(
+    return [
         dict(
             pos=pos,
             seq=seq,
-            n=n,
-            score=score,
-            rel_score=rel_score,
-            index=index,
+            n=count,
+            score=count / cov,
+            rel_score=count / max_count,
+            # The relative score is the probability that you would choose the alternative call(s) over the most occuring call(s).
+            # e.g. there are 5 calls for the nucleotide C, and 3 for T. The relative score for C is 1.0 and for T 3/5=0.6.
+            # The particularities of these relative scores make that they multiply in case of combinations of mutations.
         )
-        for seq, n, score, rel_score, index in zip(
-            counts.index,
-            counts,
-            scores,
-            relative_scores,
-            range(len(counts)),
-        )
-    )
+        for seq, count in zip(unique_queries, counts)
+    ]
 
 
 def sort_highest_score(calls):
