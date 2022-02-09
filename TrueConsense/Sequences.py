@@ -100,7 +100,7 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
 
     p_index["calls"] = p_index[["query_sequences"]].apply(
         lambda l: call_counts(
-            l.name,  # l.name is actually the query postition (the index of the df)
+            l.name,  # l.name is actually the query postition (namely the index of the df)
             l["query_sequences"],
             mincov,
         ),
@@ -123,11 +123,12 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
     alt_calls.sort(key=lambda call: call["rel_score"], reverse=True)
 
     for _, feature in gff_df.iterrows():
+        # TODO: fix for overlapping features (they should be scored together, as calls in one feature can affect another)
         feature_score = score_feature(p_index, feature)
         print(f"Fixing {feature.Name} with score {feature_score}")
 
         best_calls = []
-        for new_calls in significant_combinations_of_mutations(
+        for new_calls in significant_combinations_of_calls(
             [c for c in alt_calls if feature.start <= c["pos"] <= feature.end],
             significance=significance,
         ):
@@ -136,9 +137,8 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
 
             previous_calls = insert_calls(p_index, new_calls)
             new_feature_score = score_feature(p_index, feature)
-            if (
-                new_feature_score > feature_score
-            ):  # TODO: Add weighing of the alternative calls to the importance of the feature
+            if new_feature_score > feature_score:
+                # TODO: Add weighing of the significance of alternative calls vs. the importance of the feature
                 print(
                     f"Fixed to score of {new_feature_score} with {new_calls} in place of {previous_calls}"
                 )
@@ -159,17 +159,30 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
 
 
 def call_counts(pos, query_sequences, mincov):
+    """Produces calls and scores from query sequences.
+
+    The produced calls dictionaries with a position (pos), sequence (seq), read_count (n), score (score), relative score (rel_score) and index (index)
+
+    Args:
+        pos (int): The position on the reference
+        query_sequences (list(str)): A list of all the sequences found at this position (including insertions and deletions)
+        mincov (int): The minimum coverage depth at this position
+
+    Returns:
+        list(calls): A list of calls at the position. If cov < mincov returns an empty list.
+    """
     cov = len(query_sequences)
     if cov < mincov:
         return []
-
     counts = pd.Series(Counter(map(str.upper, query_sequences)))
-
     scores = counts / cov
 
-    # This is (kind of) the probability that you would choose the alternative call(s) over the most occuring call(s).
+    # TODO: Add strand bias as a metric.
+    # TODO: Consider insertions seperately from nucleotide calls. The first base of the insertion call is not considered in the count of that particular base.
+
+    # The relative score is the probability that you would choose the alternative call(s) over the most occuring call(s).
     # e.g. there are 5 calls for the nucleotide C, and 3 for T. The relative score for C is 1.0 and for T 3/5=0.6.
-    # These relative scores multiply in case of combinations of mutations.
+    # The particularities of these relative scores make that they multiply in case of combinations of mutations.
     relative_scores = counts / max(counts)
 
     return list(
@@ -192,20 +205,42 @@ def call_counts(pos, query_sequences, mincov):
 
 
 def sort_highest_score(calls):
+    """Sorts calls based on their score property"""
     calls.sort(key=lambda x: x["score"], reverse=True)
     return calls
 
 
 def score_feature(p_index, feature, ends_with_stop_codon=True, starts_with_atg=True):
+    """Scores a feature based on the protein it can produce.
+
+    It is: the number of codons in frame / total codons
+
+    Args:
+        p_index (pd.DataFrame): A pandas dataframe with a column picked_call.
+        feature (pd.Series): A row of a gff as produced with gffpandas dataframe with attributes_to_columns
+        ends_with_stop_codon (bool, optional): Whether the last codon of the feature is a stop. Defaults to True.
+        starts_with_atg (bool, optional): Whether the first codon of the feature is a start. Defaults to True.
+
+    Returns:
+        float: The relative number of codons in-frame.
+    """
+    # TODO: Add finding of the start codon.
+    # TODO: Add finding of alternative stop codon if the original is mutated.
     out_of_frame_counter = 0
     in_frame_counter = 0
 
     encountered_stop = False
-    frame_offset = 0
+    frame_offset = 0  # If mod. 3 applied, it is the phase of the considered nucleotide relative to the start of the feature. This shifts with insertions and deletions.
     position_in_codon = 0
-    last_two_nucs = ""
+    last_two_nucs = ""  # The last two nucleotides that have been called. This is needed for (stop)codon recognition
+
+    # TODO: Understand why the -1 is needed here.
+    # TODO: Consider sequence before feature.start to find alternative starts.
+    # TODO: Consider sequence after feature.end to find alternative stops.
     for i, call in enumerate(p_index[feature.start - 1 : feature.end]["picked_call"]):
-        if not call:  # If there is an N
+
+        # Make sure that calls afer regions with uncertainty are considered to be in-frame
+        if not call:
             # TODO: fix if there is a framshift (insertion or deletion) after a stretch of N's. An ins or del could shift the frame in step, in stead of out of step.
             frame_offset = 0  # Assume you are back in frame if insuffiecient info
             last_two_nucs = ""
@@ -224,9 +259,7 @@ def score_feature(p_index, feature, ends_with_stop_codon=True, starts_with_atg=T
         codons = chunks(seq_with_prev[2 - position_in_codon :], 3)
         for codon in codons:
             if len(codon) == 3:
-                if (
-                    encountered_stop or frame_offset % 3
-                ):  # If the offset is not a multiple of 3
+                if encountered_stop or frame_offset % 3:
                     out_of_frame_counter += 1
                 else:
                     in_frame_counter += 1
@@ -242,25 +275,49 @@ def score_feature(p_index, feature, ends_with_stop_codon=True, starts_with_atg=T
     return score
 
 
-def significant_combinations_of_mutations(ms, significance=0.5):
+def significant_combinations_of_calls(calls, significance=0.5):
+    """Scores and sorts alternative calls
+
+    In the list of input calls, find combinations of calls that go over a specified significance level.
+
+    Args:
+        calls (iterable of calls): these calls should have a property rel_score.
+        significance (float, optional): the product of relative scores that a combination of calls should not exceed. Defaults to 0.5.
+
+    Returns:
+        list(list(call)): A list of combinations of calls that have a minimal significance (sorted by significance)
+    """
     key = lambda x: x["rel_score"]
-    ms = sorted(ms, reverse=True, key=key)
+    calls = sorted(calls, reverse=True, key=key)
 
     def score(l):
+        """The score of a list of calls is the product of their relative score."""
         return np.prod(list(map(key, l)))
 
     def pred(l):
         return score(l) > significance
 
-    its = []
+    iterators = []
+    # Loop over all the combinations of calls of all lengths
     for combination_of_length in map(
-        lambda n: combinations(ms, n), range(1, len(ms) + 1)
+        lambda n: combinations(calls, n), range(1, len(calls) + 1)
     ):
-        its.append(takewhile(pred, combination_of_length))
-    return sorted(chain(*its), reverse=True, key=score)
+        # Stop taking combinations if pred is no longer. This only works if calls is sorted on score.
+        iterators.append(takewhile(pred, combination_of_length))
+
+    return sorted(chain(*iterators), reverse=True, key=score)
 
 
 def insert_calls(p_index, calls):
+    """Inserts calls into p_index['picked_call']
+
+    Args:
+        p_index (pd.DataFrame): A pandas dataframe with a column picked_call.
+        calls (list(call)): A list of calls that have to be inserted into p_index.
+
+    Returns:
+        list(call): The list of calls that were replaced.
+    """
     list_of_originals = []
     for call in calls:
         list_of_originals.append(p_index.at[call["pos"], "picked_call"])
@@ -268,10 +325,15 @@ def insert_calls(p_index, calls):
     return list_of_originals
 
 
-def fix_feature(p_index, feature, alternative_calls):
-    pass
-
-
 def chunks(l, n):
+    """Generator for splitting a list into chunks.
+
+    Args:
+        l (list(any)): The input list
+        n (int): The size of the chunks
+
+    Yields:
+        list(any): sublists of size n
+    """
     for i in range(0, len(l), n):
         yield l[i : i + n]
