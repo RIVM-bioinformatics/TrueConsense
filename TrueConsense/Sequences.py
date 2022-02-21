@@ -1,3 +1,4 @@
+from cmath import pi
 import time
 from itertools import *
 import numpy as np
@@ -148,11 +149,89 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
 
     start_time = time.time()
 
-    cons = p_index.picked_call.map(lambda call: call["seq"] if call else "N")
-
-    cons = "".join(cons)
+    cons = build_consensus(p_index, IncludeAmbig=IncludeAmbig)
     print(f"Done Building Consensus: {time.time() - start_time}")
     return cons
+
+
+def build_consensus(p_index, IncludeAmbig=True):
+
+    cons = p_index[["picked_call", "calls"]].apply(
+        lambda l: call_from_picked(l.picked_call, l.calls, IncludeAmbig), axis=1
+    )
+
+    cons = "".join(cons)
+    return cons
+
+
+def call_from_picked(picked_call, alt_calls, IncludeAmbig):
+    if not picked_call:
+        return "N"
+    if not IncludeAmbig:
+        return picked_call["seq"]
+    if picked_call["seq"] == "-":
+        return "-"
+    max_score = max(c["score"] for c in alt_calls)
+    ambig_threshold = max_score - 0.1  # Everything within 10% of the most-occuring
+    calls = [
+        c["seq"]
+        for c in alt_calls
+        if c["score"] >= ambig_threshold and c["seq"] in ["A", "C", "G", "T"]
+    ]
+    if len(calls) > 1:
+        return ambig(calls)
+    return picked_call["seq"]
+
+
+def ambig(l):
+    l.sort()
+    if l == ["A"]:
+        return "A"
+    elif l == ["C"]:
+        return "C"
+    elif l == ["G"]:
+        return "G"
+    elif l == ["T"]:
+        return "T"
+    elif l == ["A", "C"]:
+        return "M"
+    elif l == ["A", "G"]:
+        return "R"
+    elif l == ["A", "T"]:
+        return "W"
+    elif l == ["C", "G"]:
+        return "S"
+    elif l == ["C", "T"]:
+        return "Y"
+    elif l == ["G", "T"]:
+        return "K"
+    elif l == ["A", "C", "G"]:
+        return "V"
+    elif l == ["A", "C", "T"]:
+        return "H"
+    elif l == ["A", "G", "T"]:
+        return "D"
+    elif l == ["C", "G", "T"]:
+        return "B"
+    else:
+        return "N"
+
+
+"""
+double ambiguities:
+    "M": ["A", "C"],
+    "R": ["A", "G"],
+    "W": ["A", "T"],
+    "S": ["C", "G"],
+    "Y": ["C", "T"],
+    "K": ["G", "T"],
+
+triplet ambiguities:
+    "V": ["A", "C", "G"],
+    "H": ["A", "C", "T"],
+    "D": ["A", "G", "T"],
+    "B": ["C", "G", "T"],
+"""
 
 
 def call_counts(pos, query_sequences, mincov):
