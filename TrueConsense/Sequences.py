@@ -117,6 +117,7 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
         for alt_calls in p_index.calls
         for alt_call in alt_calls[1:]
         if alt_call["rel_score"] > significance
+        and alt_call["n"] > 1  # TODO: This is for performance
     ]
     alt_calls.sort(key=lambda call: call["rel_score"], reverse=True)
 
@@ -215,23 +216,6 @@ def ambig(l):
         return "B"
     else:
         return "N"
-
-
-"""
-double ambiguities:
-    "M": ["A", "C"],
-    "R": ["A", "G"],
-    "W": ["A", "T"],
-    "S": ["C", "G"],
-    "Y": ["C", "T"],
-    "K": ["G", "T"],
-
-triplet ambiguities:
-    "V": ["A", "C", "G"],
-    "H": ["A", "C", "T"],
-    "D": ["A", "G", "T"],
-    "B": ["C", "G", "T"],
-"""
 
 
 def call_counts(pos, query_sequences, mincov):
