@@ -20,7 +20,7 @@ def WriteGFF(gffheader, gffdict, outdir, name, cov):
 
 def WriteOutputs(
     cov,
-    iDict,
+    p_index,
     uGffDict,
     inputbam,
     IncludeAmbig,
@@ -38,8 +38,6 @@ def WriteOutputs(
     step 3: write the consensus sequence
     """
     today = date.today().strftime("%Y%m%d")
-
-    p_index = BuildIndex(inputbam, ref)
 
     consensus = BuildConsensus(
         p_index, mincov=cov, IncludeAmbig=IncludeAmbig, gff_df=gff_df

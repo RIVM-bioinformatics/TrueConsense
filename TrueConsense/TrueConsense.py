@@ -234,8 +234,6 @@ def main():
         IndexDF = Override_index_positions(
             IndexDF, read_override_index(args.index_override)
         )
-
-    indexDict = IndexDF.to_dict("index")
     GffHeader = IndexGff.header
     GffDF = IndexGff.df
     GffDict = GffDF.to_dict("index")
@@ -252,7 +250,7 @@ def main():
     parallel(
         WriteOutputs,
         args.coverage_levels,
-        indexDict,
+        IndexDF,
         GffDict,
         args.input,
         IncludeAmbig,
