@@ -70,8 +70,3 @@ def BuildIndex(bamfile, ref):
     start_time = time.time()
 
     return p_index
-
-
-def SupplyIndexWithCounts(p_index):
-    p_index["cov"] = p_index.query_sequences.apply(len)
-    return p_index

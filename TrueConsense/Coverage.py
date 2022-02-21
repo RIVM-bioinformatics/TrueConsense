@@ -1,8 +1,6 @@
-def BuildCoverage(iDict, output):
-    with open(output, "w") as outfile:
-        for i in range(len(iDict)):
-            cov = iDict[i + 1].get("coverage")
-            outfile.write(str(i + 1) + "\t" + str(cov) + "\n")
+def BuildCoverage(IndexDF, output):
+    IndexDF["cov"] = IndexDF["query_sequences"].map(len)
+    IndexDF[["cov"]].to_csv(output, sep="\t", header=False)
 
 
 def GetCoverage(iDict, position):

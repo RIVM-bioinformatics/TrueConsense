@@ -242,7 +242,7 @@ def main():
 
     with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
         if args.depth_of_coverage is not None:
-            xc.submit(BuildCoverage, indexDict, args.depth_of_coverage)
+            xc.submit(BuildCoverage, IndexDF, args.depth_of_coverage)
 
     if args.noambiguity is False:
         IncludeAmbig = True

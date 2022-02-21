@@ -1,12 +1,7 @@
 import os
-import sys
 from datetime import date
 
-from Bio import SeqIO
-
-from .Coverage import GetCoverage
-from .Events import ListInserts
-from .indexing import BuildIndex, ReadBam, ReadFasta
+from .indexing import BuildIndex
 from .Sequences import BuildConsensus
 
 
