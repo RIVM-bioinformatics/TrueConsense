@@ -247,7 +247,7 @@ def main():
     elif args.noambiguity is True:
         IncludeAmbig = False
 
-    parallel(
+    parmap.map(
         WriteOutputs,
         args.coverage_levels,
         IndexDF,
@@ -261,39 +261,5 @@ def main():
         GffHeader,
         IndexGff.attributes_to_columns(),  # This is a dataframe of the gff
         args.output,
-        args.threads,
-    )
-
-
-def parallel(
-    function,
-    covlist,
-    indexDict,
-    GffDict,
-    inputbam,
-    IncludeAmbig,
-    WriteVCF,
-    name,
-    ref,
-    gffoutdir,
-    gffheader,
-    IndexGff,
-    outdir,
-    workers,
-):
-    parmap.map(
-        function,
-        covlist,
-        indexDict,
-        GffDict,
-        inputbam,
-        IncludeAmbig,
-        WriteVCF,
-        name,
-        ref,
-        gffoutdir,
-        gffheader,
-        IndexGff,
-        outdir,
-        pm_processes=workers,
+        pm_processes=args.threads,
     )
