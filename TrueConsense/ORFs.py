@@ -77,6 +77,7 @@ def significant_combinations_of_calls(calls, significance=0.5):
 
     iterators = []
     # Loop over all the combinations of calls of all lengths
+    # TODO: Alternatives with the same position should not be combined.
     for combination_of_length in map(
         lambda n: combinations(calls, n), range(1, len(calls) + 1)
     ):
