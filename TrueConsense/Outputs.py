@@ -1,8 +1,7 @@
 import os
 from datetime import date
 
-from .indexing import BuildIndex
-from .Sequences import BuildConsensus
+from .ORFs import RestoreORFS
 
 
 def WriteGFF(gffheader, gffdict, outdir, name, cov):
@@ -19,14 +18,11 @@ def WriteGFF(gffheader, gffdict, outdir, name, cov):
 
 
 def WriteOutputs(
-    cov,
-    p_index,
+    mincov,
+    call_obj,
     uGffDict,
-    inputbam,
-    IncludeAmbig,
     WriteVCF,
     name,
-    ref,
     gffout,
     gffheader,
     gff_df,
@@ -39,9 +35,12 @@ def WriteOutputs(
     """
     today = date.today().strftime("%Y%m%d")
 
-    consensus = BuildConsensus(
-        p_index, mincov=cov, IncludeAmbig=IncludeAmbig, gff_df=gff_df
-    )
+    call_obj.remove_calls_with_low_coverage(mincov)
+    call_obj.sort_highest_score()
+    call_obj.pick_first_in_calls()
+    RestoreORFS(call_obj, gff_df)
+
+    consensus = call_obj.consensus()
 
     # if gffout is not None:
     #     WriteGFF(gffheader, newgff, gffout, name, cov)
@@ -124,5 +123,5 @@ def WriteOutputs(
     #                                     else:
     #                                         continue
 
-    with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{cov}.fa", "w") as out:
-        out.write(f">{name}_cov_ge_{cov}\n{consensus}\n")
+    with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{mincov}.fa", "w") as out:
+        out.write(f">{name}_cov_ge_{mincov}\n{consensus}\n")

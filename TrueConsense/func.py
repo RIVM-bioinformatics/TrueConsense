@@ -38,3 +38,51 @@ class color:
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
     END = "\033[0m"
+
+
+def chunks(l, n):
+    """Generator for splitting a list into chunks.
+
+    Args:
+        l (list(any)): The input list
+        n (int): The size of the chunks
+
+    Yields:
+        list(any): sublists of size n
+    """
+    for i in range(0, len(l), n):
+        yield l[i : i + n]
+
+
+def ambig(l):
+    l.sort()
+    if l == ["A"]:
+        return "A"
+    elif l == ["C"]:
+        return "C"
+    elif l == ["G"]:
+        return "G"
+    elif l == ["T"]:
+        return "T"
+    elif l == ["A", "C"]:
+        return "M"
+    elif l == ["A", "G"]:
+        return "R"
+    elif l == ["A", "T"]:
+        return "W"
+    elif l == ["C", "G"]:
+        return "S"
+    elif l == ["C", "T"]:
+        return "Y"
+    elif l == ["G", "T"]:
+        return "K"
+    elif l == ["A", "C", "G"]:
+        return "V"
+    elif l == ["A", "C", "T"]:
+        return "H"
+    elif l == ["A", "G", "T"]:
+        return "D"
+    elif l == ["C", "G", "T"]:
+        return "B"
+    else:
+        return "N"

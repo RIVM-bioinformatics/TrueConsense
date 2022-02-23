@@ -7,21 +7,20 @@ import concurrent.futures as cf
 import multiprocessing
 import os
 import pathlib
+from re import M
 import sys
 
 import parmap
 
-from .Coverage import BuildCoverage
 from .func import MyHelpFormatter, color
 from .indexing import (
-    BuildIndex,
     Gffindex,
-    Override_index_positions,
     ReadBam,
-    read_override_index,
+    ReadFasta,
 )
 from .Outputs import WriteOutputs
 from .version import __version__
+from .Calls import Calls
 
 
 def GetArgs(givenargs):
@@ -224,39 +223,37 @@ def main():
     args = GetArgs(sys.argv[1:])
 
     with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
-        IndexDF = xc.submit(BuildIndex, args.input, args.reference)
         IndexGff = xc.submit(Gffindex, args.features)
-
-        IndexDF = IndexDF.result()
+        # IndexDF = xc.submit(BuildIndex, args.input, args.reference)
         IndexGff = IndexGff.result()
+        # IndexDF = IndexDF.result()
 
-    if args.index_override:
-        IndexDF = Override_index_positions(
-            IndexDF, read_override_index(args.index_override)
-        )
     GffHeader = IndexGff.header
     GffDF = IndexGff.df
     GffDict = GffDF.to_dict("index")
 
-    with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
-        if args.depth_of_coverage is not None:
-            xc.submit(BuildCoverage, IndexDF, args.depth_of_coverage)
+    IncludeAmbig = not args.noambiguity
 
-    if args.noambiguity is False:
-        IncludeAmbig = True
-    elif args.noambiguity is True:
-        IncludeAmbig = False
+    ref = ReadFasta(args.reference)
+    call_obj = Calls(ref, IncludeAmbig=IncludeAmbig, significance=0.5)
+    call_obj.fill_positions_from_bam(bamfile=args.input)
+    # if args.index_override:
+    #     IndexDF = Override_index_positions(
+    #         IndexDF, read_override_index(args.index_override)
+    #     )
+    call_obj.calculate_scores()
+
+    # with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
+    if args.depth_of_coverage is not None:
+        call_obj.p_index[["cov"]].to_csv(args.depth_of_coverage, sep="\t", header=False)
 
     parmap.map(
         WriteOutputs,
         args.coverage_levels,
-        IndexDF,
+        call_obj,
         GffDict,
-        args.input,
-        IncludeAmbig,
         args.variants,
         args.samplename,
-        args.reference,
         args.output_gff,
         GffHeader,
         IndexGff.attributes_to_columns(),  # This is a dataframe of the gff
