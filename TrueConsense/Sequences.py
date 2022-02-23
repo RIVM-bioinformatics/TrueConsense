@@ -33,8 +33,13 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
     alt_calls.sort(key=lambda call: call["rel_score"], reverse=True)
 
     for _, feature in gff_df.iterrows():
+        if feature["type"].upper() not in [
+            "GENE",
+            "CDS",
+        ]:  # TODO: Switch this to only CDS in the future as gff from RefSeq is used
+            continue
         # TODO: fix for overlapping features (they should be scored together, as calls in one feature can affect another)
-        feature_score = score_feature(p_index, feature)
+        feature_score = score_coding_sequence(p_index, feature)
         print(f"Fixing {feature.Name} with score {feature_score}")
 
         best_calls = []
@@ -46,7 +51,7 @@ def BuildConsensus(p_index, mincov=50, IncludeAmbig=False, gff_df=None):
                 break
 
             previous_calls = insert_calls(p_index, new_calls)
-            new_feature_score = score_feature(p_index, feature)
+            new_feature_score = score_coding_sequence(p_index, feature)
             if new_feature_score > feature_score:
                 # TODO: Add weighing of the significance of alternative calls vs. the importance of the feature
                 print(
@@ -173,7 +178,9 @@ def sort_highest_score(calls):
     return calls
 
 
-def score_feature(p_index, feature, ends_with_stop_codon=True, starts_with_atg=True):
+def score_coding_sequence(
+    p_index, feature, ends_with_stop_codon=True, starts_with_atg=True
+):
     """Scores a feature based on the protein it can produce.
 
     It is: the number of codons in frame / total codons
