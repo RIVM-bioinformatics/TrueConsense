@@ -5,25 +5,40 @@ from .func import chunks, ambig
 
 
 class Calls:
-    ref = None
+    ref_file_location = None
+    ref_contig = None
+    ref_seq = None
     p_index = None
     IncludeAmbig = None
     significance = None
     len = None
 
-    def __init__(self, ref, IncludeAmbig=True, significance=0.5):
-        self.ref = ref
-        self.len = len(ref)
+    def __init__(
+        self,
+        ref_file_location,
+        ref_contig,
+        ref_seq,
+        IncludeAmbig=True,
+        significance=0.5,
+    ):
+        self.ref_file_location = ref_file_location
+        self.ref_contig = ref_contig
+        self.ref_seq = ref_seq
+        self.len = len(self.ref_seq)
+
         self.IncludeAmbig = IncludeAmbig
         self.p_index = pd.DataFrame(
             dict(
-                refnuc=list(ref),
+                refnuc=list(self.ref_seq),
                 query_sequences=np.empty((self.len, 0)).tolist(),
                 picked_call=np.nan,
             ),
             index=range(1, self.len + 1),
         )
         self.significance = significance
+
+    def __len__(self):
+        return self.len
 
     def fill_positions_from_bam(self, bamfile, positions=None):
         if positions:
@@ -161,11 +176,36 @@ class Calls:
         return score
 
     def consensus(self):
-        cons = self.p_index[["picked_call", "calls"]].apply(
+        self.p_index["picked_seq"] = self.p_index[["picked_call", "calls"]].apply(
             lambda l: self.call_from_picked(l.picked_call, l.calls),
             axis=1,
         )
-        return "".join(cons)
+        return "".join(self.p_index["picked_seq"])
+
+    def get_mutations(self):
+        if not "picked_seq" in self.p_index.columns:
+            _ = self.consensus()
+
+        anchor_pos = None
+        anchor_seq = None
+        anchor_cov = None
+        for pos, picked_seq, refnuc, cov in self.p_index[
+            ["picked_seq", "refnuc", "cov"]
+        ].itertuples(name=None):
+            if picked_seq == "-":
+                if not anchor_seq:
+                    anchor_pos = pos - 1
+                    anchor_seq = self.p_index.at[anchor_pos, "picked_seq"] + refnuc
+                    anchor_cov = self.p_index.at[anchor_pos, "cov"]
+                else:
+                    anchor_seq += refnuc
+                continue
+            if anchor_seq:
+                yield (anchor_pos, anchor_seq, anchor_seq[0], anchor_cov)
+            anchor_seq = anchor_pos = anchor_cov = None
+
+            if refnuc != picked_seq:
+                yield (pos, refnuc, picked_seq, cov)
 
     def call_from_picked(self, picked_call, alt_calls):
         if not picked_call:

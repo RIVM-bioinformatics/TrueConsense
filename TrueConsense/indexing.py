@@ -9,9 +9,7 @@ def ReadBam(f):
 
 
 def ReadFasta(f):
-    with pysam.FastaFile("MN908947.fasta") as fa:
-        sequence = fa.fetch(fa.references[0])
-    return sequence
+    return pysam.FastaFile("MN908947.fasta")
 
 
 def Gffindex(file):

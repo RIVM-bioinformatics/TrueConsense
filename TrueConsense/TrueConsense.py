@@ -224,15 +224,25 @@ def main():
 
     with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
         IndexGff = xc.submit(Gffindex, args.features)
-        ref = xc.submit(ReadFasta, args.reference)
+        ref_obj = xc.submit(ReadFasta, args.reference)
         # IndexDF = xc.submit(BuildIndex, args.input, args.reference)
         gff_obj = IndexGff.result()
-        ref = ref.result()
+        ref_obj = ref_obj.result()
         # IndexDF = IndexDF.result()
+
+    ref_file_location = args.reference
+    ref_contig = ref_obj.references[0]
+    ref_seq = ref_obj.fetch(ref_contig)
 
     IncludeAmbig = not args.noambiguity
 
-    call_obj = Calls(ref, IncludeAmbig=IncludeAmbig, significance=0.5)
+    call_obj = Calls(
+        ref_file_location,
+        ref_contig,
+        ref_seq,
+        IncludeAmbig=IncludeAmbig,
+        significance=0.5,
+    )
     call_obj.fill_positions_from_bam(bamfile=args.input)
     # if args.index_override:
     #     IndexDF = Override_index_positions(

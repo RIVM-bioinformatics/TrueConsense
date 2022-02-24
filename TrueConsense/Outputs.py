@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import date
 
 from .ORFs import RestoreORFS
@@ -46,83 +47,35 @@ def WriteOutputs(
         call_obj.update_gff_coods_with_insertions(gff_obj)
         gff_obj.to_gff3(f"{gffout}/{name}_cov_ge_{mincov}.gff")
 
-    #     if WriteVCF is not None:
-    #         hasinserts, insertpositions = ListInserts(iDict, cov, bam)
-
-    #         q = 0
-    #         for record in SeqIO.parse(ref, "fasta"):
-    #             if q != 0:
-    #                 break
-    #             q += 1
-    #             refID = record.id
-    #             reflist = list(record.seq)
-
-    #         seqlist = list(consensus_noinsert.upper())
-
-    #         with open(f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{cov}.vcf", "w") as out:
-    #             out.write(
-    #                 f"""##fileformat=VCFv4.3
-    # ##fileDate={today}
-    # ##source='TrueConsense {' '.join(sys.argv[1:])}'
-    # ##reference='{ref}'
-    # ##contig=<ID={refID}>
-    # ##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
-    # ##INFO=<ID=INDEL,Number=0,Type=Flag,Description="Indicates that the variant is an INDEL.">
-    # #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
-    # """
-    #             )
-    #             # writecontents
-
-    #             delskips = []
-    #             for i in range(len(reflist)):
-    #                 if i in delskips:
-    #                     continue
-
-    #                 if reflist[i] != seqlist[i]:
-    #                     b = i
-
-    #                     if seqlist[i] == "-":
-
-    #                         gapextendedreflist = []
-    #                         while seqlist[b] == "-":
-    #                             gapextendedreflist.append(reflist[b])
-    #                             delskips.append(b)
-    #                             b += 1
-
-    #                         gapextension = "".join(gapextendedreflist)
-    #                         joinedreflist = str(reflist[i - 1] + gapextension)
-
-    #                         currentcov = GetCoverage(iDict, i + 1)
-    #                         out.write(
-    #                             f"{refID}\t{i}\t.\t{joinedreflist}\t{seqlist[i-1]}\t.\tPASS\tDP={currentcov};INDEL\n"
-    #                         )
-    #                     else:
-    #                         if i == 0:
-    #                             p = 1
-    #                         elif i == 1:
-    #                             p = 1
-    #                         else:
-    #                             p = i
-    #                         currentcov = GetCoverage(iDict, p + 1)
-    #                         out.write(
-    #                             f"{refID}\t{i+1}\t.\t{reflist[i]}\t{seqlist[i]}\t.\tPASS\tDP={currentcov}\n"
-    #                         )
-    #                 if hasinserts is True:
-    #                     for lposition in insertpositions:
-    #                         if i == lposition:
-    #                             currentcov = GetCoverage(iDict, i + 1)
-    #                             if currentcov > cov:
-    #                                 for y in insertpositions.get(lposition):
-    #                                     to_insert = str(
-    #                                         insertpositions.get(lposition).get(y)
-    #                                     )
-    #                                     if to_insert is not None:
-    #                                         CombinedEntry = seqlist[i] + to_insert
-    #                                         out.write(
-    #                                             f"{refID}\t{i}\t.\t{reflist[i]}\t{CombinedEntry}\t.\tPASS\tDP={currentcov};INDEL\n"
-    #                                         )
-    #                                     else:
-    #                                         continue
+    if WriteVCF is not None:
+        with open(
+            f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{mincov}.vcf", "w"
+        ) as out:
+            out.write(
+                f"""##fileformat=VCFv4.3
+##fileDate={today}
+##source='TrueConsense {' '.join(sys.argv[1:])}'
+##reference='{call_obj.ref_file_location}'
+##contig=<ID={call_obj.ref_contig}>
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##INFO=<ID=INDEL,Number=0,Type=Flag,Description="Indicates that the variant is an INDEL.">
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+"""
+            )
+            # writecontents
+            for (
+                pos,
+                refnuc,
+                altnuc,
+                cov,
+            ) in call_obj.get_mutations():
+                out.write(
+                    f"{call_obj.ref_contig}\t{pos}\t.\t{refnuc}\t{altnuc}\t.\tPASS\tDP={cov}"
+                )
+                if len(refnuc) != len(altnuc):
+                    out.write(";INDEL\n")
+                else:
+                    out.write("\n")
 
     with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{mincov}.fa", "w") as out:
         out.write(f">{name}_cov_ge_{mincov}\n{consensus}\n")
