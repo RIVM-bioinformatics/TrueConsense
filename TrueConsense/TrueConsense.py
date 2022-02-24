@@ -224,17 +224,14 @@ def main():
 
     with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
         IndexGff = xc.submit(Gffindex, args.features)
+        ref = xc.submit(ReadFasta, args.reference)
         # IndexDF = xc.submit(BuildIndex, args.input, args.reference)
-        IndexGff = IndexGff.result()
+        gff_obj = IndexGff.result()
+        ref = ref.result()
         # IndexDF = IndexDF.result()
-
-    GffHeader = IndexGff.header
-    GffDF = IndexGff.df
-    GffDict = GffDF.to_dict("index")
 
     IncludeAmbig = not args.noambiguity
 
-    ref = ReadFasta(args.reference)
     call_obj = Calls(ref, IncludeAmbig=IncludeAmbig, significance=0.5)
     call_obj.fill_positions_from_bam(bamfile=args.input)
     # if args.index_override:
@@ -251,12 +248,10 @@ def main():
         WriteOutputs,
         args.coverage_levels,
         call_obj,
-        GffDict,
+        gff_obj,  # This is a dataframe of the gff
         args.variants,
         args.samplename,
         args.output_gff,
-        GffHeader,
-        IndexGff.attributes_to_columns(),  # This is a dataframe of the gff
         args.output,
         pm_processes=args.threads,
     )

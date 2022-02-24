@@ -20,12 +20,10 @@ def WriteGFF(gffheader, gffdict, outdir, name, cov):
 def WriteOutputs(
     mincov,
     call_obj,
-    uGffDict,
+    gff_obj,
     WriteVCF,
     name,
     gffout,
-    gffheader,
-    gff_df,
     outdir,
 ):
     """
@@ -38,12 +36,15 @@ def WriteOutputs(
     call_obj.remove_calls_with_low_coverage(mincov)
     call_obj.sort_highest_score()
     call_obj.pick_first_in_calls()
-    RestoreORFS(call_obj, gff_df)
+    RestoreORFS(call_obj, gff_obj.attributes_to_columns())
 
+    print("Making consensus")
     consensus = call_obj.consensus()
+    print("Done making consensus")
 
-    # if gffout is not None:
-    #     WriteGFF(gffheader, newgff, gffout, name, cov)
+    if gffout is not None:
+        call_obj.update_gff_coods_with_insertions(gff_obj)
+        gff_obj.to_gff3(f"{gffout}/{name}_cov_ge_{mincov}.gff")
 
     #     if WriteVCF is not None:
     #         hasinserts, insertpositions = ListInserts(iDict, cov, bam)

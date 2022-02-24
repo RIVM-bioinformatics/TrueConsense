@@ -185,6 +185,38 @@ class Calls:
             return ambig(calls)
         return picked_call["seq"]
 
+    def insertions(self):
+        call_lengths = (
+            self.p_index["picked_call"]
+            .dropna()
+            .apply(lambda call: len(call["seq"]) - 1)
+            # -1 is needed because it includes the first base at the call position
+        )
+        return call_lengths[call_lengths > 1].iteritems()
+
+    def update_gff_coods_with_insertions(self, gff):
+        print("Updating gff")
+        # Take last insertion first, since coordinates shift
+        insertions = sorted(self.insertions(), key=lambda x: x[0], reverse=True)
+
+        for pos, length in insertions:
+            for cood in ["start", "end"]:
+                gff.df.loc[gff.df[cood] > pos, cood] += length
+
+        total_insertion_length = sum(length for (_, length) in insertions)
+
+        def edit_sequence_region(line):
+            if line.startswith("##sequence-region "):
+                sr, name, start, stop = line.split(" ")
+                return " ".join(
+                    [sr, name, start, str(int(stop) + total_insertion_length)]
+                )
+            return line
+
+        gff.header = "\n".join(
+            edit_sequence_region(line) for line in gff.header.split("\n")
+        )
+
 
 def sort_highest_score(calls):
     """Sorts calls based on their score property"""
