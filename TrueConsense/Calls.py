@@ -12,6 +12,7 @@ class Calls:
     IncludeAmbig = None
     significance = None
     len = None
+    cons = None
 
     def __init__(
         self,
@@ -180,11 +181,12 @@ class Calls:
             lambda l: self.call_from_picked(l.picked_call, l.calls),
             axis=1,
         )
-        return "".join(self.p_index["picked_seq"])
+        self.cons = "".join(self.p_index["picked_seq"])
+        return self.cons
 
     def get_mutations(self):
         if not "picked_seq" in self.p_index.columns:
-            _ = self.consensus()
+            _ = self.cons()
 
         anchor_pos = None
         anchor_seq = None
@@ -235,7 +237,6 @@ class Calls:
         return call_lengths[call_lengths > 1].iteritems()
 
     def update_gff_coods_with_insertions(self, gff):
-        print("Updating gff")
         # Take last insertion first, since coordinates shift
         insertions = sorted(self.insertions(), key=lambda x: x[0], reverse=True)
 
@@ -256,6 +257,39 @@ class Calls:
         gff.header = "\n".join(
             edit_sequence_region(line) for line in gff.header.split("\n")
         )
+
+        # Update gff with new stop codons
+        if not self.cons:
+            self.consensus()
+        for feature_index, start, end, attributes in gff.df[
+            gff.df.type.str.upper().isin(["GENE", "CDS"])
+        ][["start", "end", "attributes"]].itertuples(name=None):
+            slippage = "exception=ribosomal slippage" in attributes
+            if "Name=ORF1ab" in attributes:
+                # TODO: This is coronavirus specific
+                break
+
+            i = start - 1
+            while i < len(self.cons):
+                codon = ""
+                while len(codon) < 3:
+                    if i >= len(self.cons):
+                        break
+                    b = self.cons[i]
+                    if b == "-":
+                        i += 1
+                        continue
+                    codon += b
+                    i += 1
+                if slippage and i >= end - 1:
+                    # Do not update end coordinate with later stops if slippage
+                    break
+                if codon in ["TAA", "TGA", "TAG"]:
+                    gff.df.at[feature_index, "end"] = i
+                    break
+                if i >= end - 1 and codon.strip("ACTG"):
+                    # If there are any ambiguities in the codon after the orginal end
+                    break
 
 
 def sort_highest_score(calls):
