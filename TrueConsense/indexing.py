@@ -16,8 +16,8 @@ def Gffindex(file):
     return gffpd.read_gff3(file)
 
 
-# def read_override_index(f):
-#     return pd.read_csv(f, sep=",", compression="gzip", index_col=0)
+def read_override_positions(f):
+    return pd.read_csv(f, sep=",", compression="gzip", index_col=0)
 
 
 # def Override_index_positions(index, override_data):

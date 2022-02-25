@@ -16,6 +16,7 @@ from .func import MyHelpFormatter, color
 from .indexing import (
     Gffindex,
     ReadBam,
+    read_override_positions,
     ReadFasta,
 )
 from .Outputs import WriteOutputs
@@ -58,19 +59,21 @@ def GetArgs(givenargs):
         print(f'"{fname}" is not a file. Exiting...')
         sys.exit(1)
 
-    def check_index_override(fname):
-        if os.path.isfile(fname):
-            ext = "".join(pathlib.Path(fname).suffixes)
+    def check_index_override(filenames):
+        csv_fname, bam_fname = filenames
+        bam_fname = checkbam(bam_fname)
+        if os.path.isfile(csv_fname):
+            ext = "".join(pathlib.Path(csv_fname).suffixes)
             if ".csv" not in ext:
                 parser.error(
-                    f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a compressed csv file."
+                    f"Given file {color.YELLOW}({csv_fname}){color.END} doesn't seem to be a compressed csv file."
                 )
             if ".gz" not in ext:
                 parser.error(
-                    f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a compressed csv file."
+                    f"Given file {color.YELLOW}({csv_fname}){color.END} doesn't seem to be a compressed csv file."
                 )
-            return fname
-        print(f'"{fname}" is not a file. Exiting...')
+            return csv_fname, bam_fname
+        print(f'"{csv_fname}" is not a file. Exiting...')
         sys.exit(1)
 
     def currentpath():
@@ -188,9 +191,9 @@ def GetArgs(givenargs):
 
     opts.add_argument(
         "--index-override",
-        type=check_index_override,
-        metavar="File",
-        help="Override the positional index of certain genome positions with 'known' information if the given alignment is not sufficient for these positions\nMust be a compressed csv.\nPlease use with caution as this will overwrite the generated index at the given positions!\n",
+        nargs=2,
+        metavar="FILE",
+        help="Override the positional index of certain genome positions with 'known' information if the given alignment is not sufficient for these positions.\nFirst FILE must be a compressed csv containing the positions in the first column. The second FILE must be a bamfile to read thes positions from\nPlease use with caution as this will overwrite the generated index at the given positions!\n",
     )
 
     opts.add_argument(
@@ -210,6 +213,8 @@ def GetArgs(givenargs):
     )
 
     args = parser.parse_args(givenargs)
+    if args.index_override:
+        check_index_override(args.index_override)
 
     return args
 
@@ -244,10 +249,10 @@ def main():
         significance=0.5,
     )
     call_obj.fill_positions_from_bam(bamfile=args.input)
-    # if args.index_override:
-    #     IndexDF = Override_index_positions(
-    #         IndexDF, read_override_index(args.index_override)
-    #     )
+    if args.index_override:
+        override_positions_file, override_bam_file = args.index_override
+        positions = list(read_override_positions(override_positions_file).index)
+        call_obj.fill_positions_from_bam(override_bam_file, positions)
     call_obj.calculate_scores()
 
     # with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
