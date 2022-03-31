@@ -262,7 +262,6 @@ def main():
         args.output_gff,
         GffHeader,
         args.output,
-        args.threads,
     )
 
 
