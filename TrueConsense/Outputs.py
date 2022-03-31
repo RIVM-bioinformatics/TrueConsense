@@ -10,8 +10,8 @@ from .indexing import Readbam
 from .Sequences import BuildConsensus
 
 
-def WriteGFF(gffheader, gffdict, outdir, name, cov):
-    with open(f"{outdir}/{name}_cov_ge_{cov}.gff", "w") as out:
+def WriteGFF(gffheader, gffdict, outdir, name):
+    with open(f"{outdir}/{name}.gff", "w") as out:
         out.write(gffheader)
 
         for k, v in gffdict.items():
@@ -24,7 +24,7 @@ def WriteGFF(gffheader, gffdict, outdir, name, cov):
 
 
 def WriteOutputs(
-    cov,
+    mincov,
     iDict,
     uGffDict,
     inputbam,
@@ -44,16 +44,16 @@ def WriteOutputs(
     today = date.today().strftime("%Y%m%d")
 
     bam = Readbam(inputbam)
-    consensus, newgff = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, True)
-    consensus_noinsert = BuildConsensus(cov, iDict, uGffDict, IncludeAmbig, bam, False)[
-        0
-    ]
+    consensus, newgff = BuildConsensus(mincov, iDict, uGffDict, IncludeAmbig, bam, True)
+    consensus_noinsert = BuildConsensus(
+        mincov, iDict, uGffDict, IncludeAmbig, bam, False
+    )[0]
 
     if gffout is not None:
-        WriteGFF(gffheader, newgff, gffout, name, cov)
+        WriteGFF(gffheader, newgff, gffout, name)
 
     if WriteVCF is not None:
-        hasinserts, insertpositions = ListInserts(iDict, cov, bam)
+        hasinserts, insertpositions = ListInserts(iDict, mincov, bam)
 
         q = 0
         for record in SeqIO.parse(ref, "fasta"):
@@ -65,7 +65,7 @@ def WriteOutputs(
 
         seqlist = list(consensus_noinsert.upper())
 
-        with open(f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{cov}.vcf", "w") as out:
+        with open(f"{os.path.abspath(WriteVCF)}/{name}.vcf", "w") as out:
             out.write(
                 f"""##fileformat=VCFv4.3
 ##fileDate={today}
@@ -117,7 +117,7 @@ def WriteOutputs(
                     for lposition in insertpositions:
                         if i == lposition:
                             currentcov = GetCoverage(iDict, i + 1)
-                            if currentcov > cov:
+                            if currentcov > mincov:
                                 for y in insertpositions.get(lposition):
                                     to_insert = str(
                                         insertpositions.get(lposition).get(y)
@@ -130,5 +130,5 @@ def WriteOutputs(
                                     else:
                                         continue
 
-    with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{cov}.fa", "w") as out:
-        out.write(f">{name}_cov_ge_{cov}\n{consensus}\n")
+    with open(f"{os.path.abspath(outdir)}/{name}.fa", "w") as out:
+        out.write(f">{name} mincov={mincov}\n{consensus}\n")
