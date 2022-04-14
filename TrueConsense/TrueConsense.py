@@ -9,8 +9,6 @@ import os
 import pathlib
 import sys
 
-import parmap
-
 from .Coverage import BuildCoverage
 from .func import MyHelpFormatter, color
 from .indexing import (
@@ -263,35 +261,3 @@ def main():
         GffHeader,
         args.output,
     )
-
-
-# def parallel(
-#     function,
-#     covlist,
-#     indexDict,
-#     GffDict,
-#     inputbam,
-#     IncludeAmbig,
-#     WriteVCF,
-#     name,
-#     ref,
-#     gffoutdir,
-#     gffheader,
-#     outdir,
-#     workers,
-# ):
-#     parmap.map(
-#         function,
-#         covlist,
-#         indexDict,
-#         GffDict,
-#         inputbam,
-#         IncludeAmbig,
-#         WriteVCF,
-#         name,
-#         ref,
-#         gffoutdir,
-#         gffheader,
-#         outdir,
-#         pm_processes=workers,
-#     )
