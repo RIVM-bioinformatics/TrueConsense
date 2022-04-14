@@ -16,6 +16,20 @@ triplet ambiguities:
 
 
 def DoubleAmbigs(n1, n2):
+    """Takes primary and secondary nucleotides and returns the corresponding ambiguity nucleotide code.
+
+    Parameters
+    ----------
+    n1
+        the primary nucleotide
+    n2
+        the secondary nucleotide
+
+    Returns
+    -------
+        the nucleotide ambiguity code.
+
+    """
     nlist = [n1, n2]
 
     if (
@@ -42,6 +56,22 @@ def DoubleAmbigs(n1, n2):
 
 
 def TripletAmbigs(n1, n2, n3):
+    """Takes primary, secondary and tertiary nucleotides and returns the corresponding ambiguity nucleotide code.
+
+    Parameters
+    ----------
+    n1
+        the primary nucleotide
+    n2
+        the secondary nucleotide
+    n3
+        the tertiary nucleotide
+
+    Returns
+    -------
+        the nucleotide ambiguity code.
+
+    """
     nlist = [n1, n2, n3]
     if (
         any(x == "A" for x in nlist) is True
@@ -70,6 +100,26 @@ def TripletAmbigs(n1, n2, n3):
 
 
 def GetPercentages(c1, c2, c3, c4, cov):
+    """Takes the number of each nucleotide and transforms it to a percentage in relation to the coverage
+
+    Parameters
+    ----------
+    c1
+        Integer representing the count of the first nucleotide on a certain position
+    c2
+        Integer representing the count of the secondary nucleotide on a certain position
+    c3
+        Integer representing the count of the third nucleotide on a certain position
+    c4
+        Integer representing the count of the fourth nucleotide on a certain position
+    cov
+        total coverage on a certain position
+
+    Returns
+    -------
+        The percentages of each nucleotide in the sequence.
+
+    """
     p1 = (c1 / cov) * 100
     p2 = (c2 / cov) * 100
     p3 = (c3 / cov) * 100
@@ -78,6 +128,31 @@ def GetPercentages(c1, c2, c3, c4, cov):
 
 
 def AmbiguityType(p1, p2, p3, p4):
+    """If the distance between the first two percentages is less than 10, then check if the distance between the
+    first and third percentage is less than 10, and if the distance between the second and third percentage is
+    less than 10. If all of these are true, then check if the distance between the first and fourth
+    percentage is less than 10, and if the distance between the second and fourth percentage is less than 10,
+    and if the distance between the third and fourth percentage is less than 10. If all of these are true,
+    then the ambiguity type is 4. If the first three are true, but the last three are not, then the
+    ambiguity type is 3. If the first two are true, but the last three are not, then the ambiguity type
+    is 2. If the first two are not true, then the ambiguity type is None
+
+    Parameters
+    ----------
+    p1
+        the percentage of the first nucleotide
+    p2
+        the percentage of the secondary nucleotide
+    p3
+        the percentage of the third nucleotide
+    p4
+        the percentage of the fourth nucleotide
+
+    Returns
+    -------
+        the Ambiguity Type.
+
+    """
     maxdistance = 10
     if (abs(p1 - p2)) <= maxdistance:
         if (abs(p1 - p3)) <= maxdistance and (abs(p2 - p3)) <= maxdistance:
@@ -97,10 +172,35 @@ def AmbiguityType(p1, p2, p3, p4):
 
 
 def unpack(q):
+    # todo: useless function?
     return q[0], q[1]
 
 
 def IsAmbiguous(one, two, three, four, cov):
+    """If the coverage is 0, return False, None. If the coverage is not 0, unpack the counts and get the
+    percentages. If the percentages are not ambiguous, return False, None. If the percentages are
+    ambiguous, return True, the ambiguous character.
+
+    Parameters
+    ----------
+    one
+        the first nucleotide
+    two
+        the first nucleotide
+    three
+        the nucleotide counts for the third position in the codon
+    four
+        a tuple of the form (nuc, count)
+    cov
+        coverage
+
+    Returns
+    -------
+        A tuple of two values. The first value is a boolean, which is True if the site is ambiguous, and
+    False if it is not. The second value is a string, which is the ambiguous character if the site is
+    ambiguous, and None if it is not.
+
+    """
     if cov == 0:
         return False, None
 
