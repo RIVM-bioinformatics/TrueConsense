@@ -127,13 +127,12 @@ def GetArgs(givenargs):
     )
 
     reqs.add_argument(
-        "--coverage-levels",
+        "--coverage-level",
         "-cov",
         type=int,
-        nargs="+",
-        default=1,
-        metavar="1 5 10",
-        help="List of one or multiple 'levels' that will be used as the minimum coverage",
+        default=30,
+        metavar="100",
+        help="The minimum coverage level of the consensus and variant calls",
         required=True,
     )
 
@@ -251,9 +250,8 @@ def main():
     elif args.noambiguity is True:
         IncludeAmbig = False
 
-    parallel(
-        WriteOutputs,
-        args.coverage_levels,
+    WriteOutputs(
+        args.coverage_level,
         indexDict,
         GffDict,
         args.input,
@@ -264,37 +262,36 @@ def main():
         args.output_gff,
         GffHeader,
         args.output,
-        args.threads,
     )
 
 
-def parallel(
-    function,
-    covlist,
-    indexDict,
-    GffDict,
-    inputbam,
-    IncludeAmbig,
-    WriteVCF,
-    name,
-    ref,
-    gffoutdir,
-    gffheader,
-    outdir,
-    workers,
-):
-    parmap.map(
-        function,
-        covlist,
-        indexDict,
-        GffDict,
-        inputbam,
-        IncludeAmbig,
-        WriteVCF,
-        name,
-        ref,
-        gffoutdir,
-        gffheader,
-        outdir,
-        pm_processes=workers,
-    )
+# def parallel(
+#     function,
+#     covlist,
+#     indexDict,
+#     GffDict,
+#     inputbam,
+#     IncludeAmbig,
+#     WriteVCF,
+#     name,
+#     ref,
+#     gffoutdir,
+#     gffheader,
+#     outdir,
+#     workers,
+# ):
+#     parmap.map(
+#         function,
+#         covlist,
+#         indexDict,
+#         GffDict,
+#         inputbam,
+#         IncludeAmbig,
+#         WriteVCF,
+#         name,
+#         ref,
+#         gffoutdir,
+#         gffheader,
+#         outdir,
+#         pm_processes=workers,
+#     )
