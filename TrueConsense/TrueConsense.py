@@ -193,7 +193,7 @@ def GetArgs(givenargs):
         "--index-override",
         nargs=2,
         metavar="FILE",
-        help="Override the positional index of certain genome positions with 'known' information if the given alignment is not sufficient for these positions.\nFirst FILE must be a compressed csv containing the positions in the first column. The second FILE must be a bamfile to read thes positions from\nPlease use with caution as this will overwrite the generated index at the given positions!\n",
+        help="Override the positional index of certain genome positions with 'known' information if the given alignment is not sufficient for these positions.\nFirst FILE must be a compressed csv containing the positions in the first column. The second FILE must be a bamfile to read these positions from\nPlease use with caution as this will overwrite the generated index at the given positions!\n",
     )
 
     opts.add_argument(
