@@ -11,6 +11,21 @@ from .Sequences import BuildConsensus
 
 
 def WriteGFF(gffheader, gffdict, outdir, name):
+    """Function takes a GFF header, a dictionary of GFF features, an output directory, and a name for
+    the output file, and writes the GFF header and the GFF features to a file in the output directory
+
+    Parameters
+    ----------
+    gffheader
+        The header of the GFF file.
+    gffdict
+        a dictionary of GFF features
+    outdir
+        the directory where you want the output files to go
+    name
+        the name of the file you want to write
+
+    """
     with open(f"{outdir}/{name}.gff", "w") as out:
         out.write(gffheader)
 
