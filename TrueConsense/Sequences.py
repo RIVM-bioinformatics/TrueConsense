@@ -7,6 +7,24 @@ from .ORFs import CorrectGFF, SolveTripletLength, in_orf
 
 
 def WalkForward(index, p, fixedpositions="expand"):
+    """Function takes a dictionary of pileup data and current position, and returns a
+    dictionary of future positions which contain deletions
+
+    Parameters
+    ----------
+    index
+        the index of the genome
+    p
+        the position of the nucleotide you want to start from
+        fixedpositions, optional
+        This is the number of nucleotides to walk forward. If you want to walk forward until you hit a
+        nucleotide, set this to "expand".
+
+    Returns
+    -------
+        A list of future positions which contain deletions.
+
+    """
 
     if fixedpositions != "expand":
         lastposition = list(enumerate(index))[-1][1]
@@ -36,6 +54,24 @@ def WalkForward(index, p, fixedpositions="expand"):
 
 
 def complement_index(index, gffdict, skips):
+    """Takes a dictionary of pileup data, a dictionary of gff features, and a list of positions to skip, and returns a
+    dictionary pileup data, with the addition of a new key, "ORF", which contains the which position in a codon the nucleotide-position has
+
+    Parameters
+    ----------
+    index
+        a dictionary of the form {protein_id: {'start': start, 'stop': stop, 'strand': strand, 'ORF': ORF}}
+    gffdict
+        a dictionary of the gff file, with the keys being the gene names and the values being the start and
+        stop positions of the gene.
+    skips
+        a list of the names of the genes that you want to skip.
+
+    Returns
+    -------
+        The index is being returned.
+
+    """
     for i, p in enumerate(index):
         if p in skips:
             continue
@@ -45,6 +81,21 @@ def complement_index(index, gffdict, skips):
 
 
 def _orf_codonposition(gffdict, p):
+    """Takes a dictionary of ORFs and a position, and returns the ORF and the codon position of that
+    position
+
+    Parameters
+    ----------
+    gffdict
+        a dictionary of gff features
+    p
+        position in the genome
+
+    Returns
+    -------
+        a tuple of the ORF name and the codon position of the position p.
+
+    """
     a = []
     for k in gffdict.keys():
         start = gffdict[k].get("start")
@@ -58,19 +109,24 @@ def _orf_codonposition(gffdict, p):
     return None, None
 
 
-def _orf_overlapnumber(index, p):
-    if _orf_hasoverlap(index, p) is True:
-        return int(len(index[p].get("ORF")) / 2)
-    return None
-
-
-def _orf_hasoverlap(index, p):
-    if len(index[p].get("ORF")) > 2:
-        return True
-    return False
-
-
 def GetNucleotide(iDict, position, count):
+    """Takes a dictionary of sequences, a position, and a count, and returns the nucleotide at that
+    position that occurs the most, and the number of times it occurs
+
+    Parameters
+    ----------
+    iDict
+        The dictionary of of pileup data
+    position
+        the position in the sequence you want to get the nucleotide for
+    count
+        the number of nucleotides you want to return
+
+    Returns
+    -------
+        The nucleotide and the frequency of that nucleotide at a given position.
+
+    """
     sorteddist = sorted(
         ((value, key) for key, value in GetDistribution(iDict, position).items())
     )
@@ -78,6 +134,21 @@ def GetNucleotide(iDict, position, count):
 
 
 def GetDistribution(iDict, position):
+    """Takes a dictionary of dictionaries and a position and returns a dictionary of the distribution of
+    nucleotides at that position
+
+    Parameters
+    ----------
+    iDict
+        the dictionary pileup data
+    position
+        the position in the sequence that you want to get the distribution for
+
+    Returns
+    -------
+        A dictionary of the distribution of nucleotides at a given position.
+
+    """
     dist = {}
     dist["A"] = iDict[position].get("A")
     dist["T"] = iDict[position].get("T")
