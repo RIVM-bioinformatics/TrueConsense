@@ -4,23 +4,94 @@ import pysam
 
 
 def Readbam(f):
+    """Reads in a bam file and returns a pysam.AlignmentFile object
+
+    Parameters
+    ----------
+    f
+        the name of the bam file
+
+    Returns
+    -------
+        A pysam.AlignmentFile object
+
+    """
     return pysam.AlignmentFile(f, "rb")
 
 
 def Gffindex(file):
+    """Reads in a GFF3 file and returns a pandas dataframe
+
+    Parameters
+    ----------
+    file
+        the path to the gff file
+
+    Returns
+    -------
+        A dataframe
+
+    """
     return gffpd.read_gff3(file)
 
 
 def read_override_index(f):
+    """Reads a csv file, and uses the first column as the index
+
+    Parameters
+    ----------
+    f
+        the file to read
+
+    Returns
+    -------
+        A dataframe with the index column being the first column.
+
+    """
     return pd.read_csv(f, sep=",", compression="gzip", index_col=0)
 
 
 def Override_index_positions(index, override_data):
+    """Takes a dataframe and a second dataframe with the same index and columns, and replaces the values
+    in the first dataframe with the values in the second dataframe
+
+    Parameters
+    ----------
+    index
+        the index of the dataframe you want to override
+    override_data
+        a dataframe with the same columns as the index, but with the values you want to override
+
+    Returns
+    -------
+        Dataframe with the overridden data.
+
+    """
     index.loc[override_data.index, :] = override_data[:]
     return index
 
 
 def BuildIndex(bamfile, ref):
+    """Function takes a BAM file and a reference genome, and returns a dataframe pileup contents for each position in the bamfile.
+
+    Parameters
+    ----------
+    bamfile
+        The path to the bam file
+    ref
+        The reference genome
+
+    Returns
+    -------
+        A dataframe with the following columns:
+        pos: position in the reference genome
+        coverage: number of reads covering the position
+        A: number of reads with an A at the position
+        T: number of reads with a T at the position
+        C: number of reads with a C at the position
+        G: number of reads with a G at the position
+
+    """
     bamfile = pysam.AlignmentFile(bamfile, "rb")
     ref_fasta = pysam.FastaFile(ref)
     ref_length = ref_fasta.lengths[0]
@@ -28,6 +99,18 @@ def BuildIndex(bamfile, ref):
     pileup = bamfile.pileup(stepper="nofilter", max_depth=10000000, min_base_quality=0)
 
     def parse_query_sequences(l):
+        """Takes a list of strings, and returns a tuple of integers
+
+        Parameters
+        ----------
+        l
+            the list of bases in the query sequence
+
+        Returns
+        -------
+            the coverage, a, t, c, g, x, and i values.
+
+        """
         coverage = a = c = t = g = x = i = 0
         for b in l:
             coverage += 1
