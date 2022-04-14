@@ -3,6 +3,23 @@ from collections import Counter
 
 
 def ListInserts(iDict, mincov, bam):
+    """This function takes a dictionary pileup contents, a minimum coverage value, and a bam file.
+    returns a boolean and a dictionary of insert positions.
+
+    Parameters
+    ----------
+    iDict
+        This is the dictionary that contains pileup information including coverage and insertions for each position.
+    mincov
+        minimum coverage to take into account
+    bam
+        the bam file
+
+    Returns
+    -------
+        A boolean value and a dictionary of positions with the insert size and nucleotide sequence
+
+    """
     positions = {}
 
     for k in iDict.keys():
@@ -28,6 +45,21 @@ def ListInserts(iDict, mincov, bam):
 
 
 def ExtractInserts(bam, position):
+    """It takes a bam file and a position and returns the most common insert sequence and the size of the
+    insert
+
+    Parameters
+    ----------
+    bam
+        the bam file
+    position
+        the position in the reference genome to extract
+
+    Returns
+    -------
+        the most common insert sequence and the size of the insert.
+
+    """
     rname = bam.references[0]
     start = position - 1
     end = position
@@ -51,6 +83,20 @@ def ExtractInserts(bam, position):
 
 
 def MinorityDel(index, p):
+    """If the percentage of deletions on a position is greater than 15%, then return True
+
+    Parameters
+    ----------
+    index
+        The dictionary with pileup contents per position
+    p
+        position in the genome
+
+    Returns
+    -------
+        True or False
+
+    """
     cov = index[p].get("coverage")
     dels = index[p].get("X")
     perc = (dels / cov) * 100
