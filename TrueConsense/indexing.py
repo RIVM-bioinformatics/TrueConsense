@@ -147,7 +147,7 @@ def BuildIndex(bamfile, ref):
     missing_p_index = pd.DataFrame(
         ((i, 0, 0, 0, 0, 0, 0, 0) for i in missing_positions), columns=columns
     )
-    p_index = p_index.append(missing_p_index).set_index("pos").sort_index()
+    p_index = pd.concat([p_index, missing_p_index]).set_index("pos").sort_index()
     p_index.index.name = None
 
     return p_index

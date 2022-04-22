@@ -10,7 +10,7 @@ from .indexing import Readbam
 from .Sequences import BuildConsensus
 
 
-def WriteGFF(gffheader, gffdict, outdir, name):
+def WriteGFF(gffheader, gffdict, output_gff, name):
     """Function takes a GFF header, a dictionary of GFF features, an output directory, and a name for
     the output file, and writes the GFF header and the GFF features to a file in the output directory
 
@@ -26,7 +26,7 @@ def WriteGFF(gffheader, gffdict, outdir, name):
         the name of the file you want to write
 
     """
-    with open(f"{outdir}/{name}.gff", "w") as out:
+    with open(output_gff, "w") as out:
         out.write(gffheader)
 
         for k, v in gffdict.items():
@@ -44,12 +44,12 @@ def WriteOutputs(
     uGffDict,
     inputbam,
     IncludeAmbig,
-    WriteVCF,
+    output_vcf,
     name,
     ref,
-    gffout,
+    output_gff,
     gffheader,
-    outdir,
+    output_consensus,
 ):
     """
     step 1: construct the consensus sequences, both with and without inserts
@@ -64,10 +64,10 @@ def WriteOutputs(
         mincov, iDict, uGffDict, IncludeAmbig, bam, False
     )[0]
 
-    if gffout is not None:
-        WriteGFF(gffheader, newgff, gffout, name)
+    if output_gff is not None:
+        WriteGFF(gffheader, newgff, output_gff, name)
 
-    if WriteVCF is not None:
+    if output_vcf is not None:
         hasinserts, insertpositions = ListInserts(iDict, mincov, bam)
 
         q = 0
@@ -80,7 +80,7 @@ def WriteOutputs(
 
         seqlist = list(consensus_noinsert.upper())
 
-        with open(f"{os.path.abspath(WriteVCF)}/{name}.vcf", "w") as out:
+        with open(output_vcf, "w") as out:
             out.write(
                 f"""##fileformat=VCFv4.3
 ##fileDate={today}
@@ -145,5 +145,5 @@ def WriteOutputs(
                                     else:
                                         continue
 
-    with open(f"{os.path.abspath(outdir)}/{name}.fa", "w") as out:
+    with open(output_consensus, "w") as out:
         out.write(f">{name} mincov={mincov}\n{consensus}\n")
