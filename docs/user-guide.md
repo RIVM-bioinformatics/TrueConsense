@@ -24,7 +24,7 @@ trueconsense \
     --reference reference.fasta \
     --features reference-features.gff \
     --samplename example \
-    --output test_output/ \
+    --output test_output/example_cov_ge_50.fa \
     --coverage-level 50
 ```
 
@@ -45,7 +45,7 @@ Aside from just creating a consensus-sequence, TrueConsense can also provide you
         --reference reference.fasta \
         --features reference-features.gff \
         --samplename example \
-        --output test_output/ \
+        --output test_output/example_cov_ge_30.fa \
         --coverage-level 30 \
         --depth-of-coverage example_coverage.tsv 
     ```
@@ -63,9 +63,9 @@ Aside from just creating a consensus-sequence, TrueConsense can also provide you
         --reference reference.fasta \
         --features reference-features.gff \
         --samplename example \
-        --output test_output/ \
+        --output test_output/example_cov_ge_30.fa \
         --coverage-level 30 \
-        --variants vcf_output/ 
+        --variants vcf_output/example_cov_ge_30.vcf
     ```
 
 ??? summary "Generating updated GFF files"
@@ -81,9 +81,9 @@ Aside from just creating a consensus-sequence, TrueConsense can also provide you
         --reference reference.fasta \
         --features reference-features.gff \
         --samplename example \
-        --output test_output/ \
+        --output test_output/example_cov_ge_30.fa \
         --coverage-level 30 \
-        --output-gff gff_output/ 
+        --output-gff gff_output/example_cov_ge_30.gff
     ```
 
 TrueConsense calls IUPAC nucleotide ambiguity-codes by default when an aligned-position has an even (or near-even) split of nucleotides.  
