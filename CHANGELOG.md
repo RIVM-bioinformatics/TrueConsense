@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0](https://www.github.com/RIVM-bioinformatics/TrueConsense/compare/v0.4.0...v0.5.0) (2022-04-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* Use output files in stead of folders
+
+### Features
+
+* Use output files in stead of folders ([b0dfef8](https://www.github.com/RIVM-bioinformatics/TrueConsense/commit/b0dfef878c09000c475ee0ff11f0fdefeddd4503))
+
+
+### Documentation
+
+* Update docs for file output in stead of folders ([7c47393](https://www.github.com/RIVM-bioinformatics/TrueConsense/commit/7c47393ee7f8b30a7439897c90dbd9c25f0acf4c))
+
 ## [0.4.0](https://www.github.com/RIVM-bioinformatics/TrueConsense/compare/v0.3.0...v0.4.0) (2022-04-14)
 
 
