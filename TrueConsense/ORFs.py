@@ -1,192 +1,211 @@
-def in_orf(loc, gffd):
-    """If the location is in any of the ORFs, return True. Otherwise, return False
+import time
+from itertools import *
+import numpy as np
 
-    Parameters
-    ----------
-    loc
-        the current position
-    gffd
-        a dictionary of dictionaries, where the keys are the gene IDs, and the values are dictionaries containing the gene attributes
 
-    Returns
-    -------
-        A list of True/False values.
+def RestoreORFS(call_obj, gff_df):
+    start_time = time.time()
 
+    # The significance is the minimal relative score that (combinations of) mutations need to have before being considered.
+    significance = call_obj.significance
+
+    alt_calls = [
+        alt_call
+        for alt_calls in call_obj.p_index.calls
+        if alt_calls is not np.nan
+        for alt_call in alt_calls[1:]
+        # TODO: Make this work for non-sorted picked calls
+        if alt_call["rel_score"] > significance
+        and alt_call["n"] > 1  # TODO: This is for performance
+    ]
+    alt_calls.sort(key=lambda call: call["rel_score"], reverse=True)
+
+    for _, feature in gff_df.iterrows():
+        if feature["type"].upper() not in [
+            "GENE",
+            "CDS",
+        ]:  # TODO: Switch this to only CDS in the future as gff from RefSeq is used
+            continue
+        # TODO: fix for overlapping features (they should be scored together, as calls in one feature can affect another)
+        feature_score = call_obj.score_coding_sequence(feature)
+        print(f"Fixing {feature.Name} with score {feature_score}")
+
+        best_calls = []
+        for new_calls in significant_combinations_of_calls(
+            [c for c in alt_calls if feature.start <= c["pos"] <= feature.end],
+            significance=significance,
+        ):
+            if feature_score > 0.99:
+                break
+
+            previous_calls = call_obj.insert_calls(new_calls)
+            new_feature_score = call_obj.score_coding_sequence(feature)
+            if new_feature_score > feature_score:
+                # TODO: Add weighing of the significance of alternative calls vs. the importance of the feature
+                print(
+                    f"Fixed to score of {new_feature_score} with {new_calls} in place of {previous_calls}"
+                )
+                feature_score = new_feature_score
+                best_calls = new_calls
+            call_obj.insert_calls(previous_calls)  # restore to default
+        call_obj.insert_calls(best_calls)
+        print(f"Final score of {feature.Name} is {feature_score}")
+    print(f"Done fixing features: {time.time() - start_time}")
+
+
+def significant_combinations_of_calls(calls, significance=0.5):
+    """Scores and sorts alternative calls
+
+    In the list of input calls, find combinations of calls that go over a specified significance level.
+
+    Args:
+        calls (iterable of calls): these calls should have a property rel_score.
+        significance (float, optional): the product of relative scores that a combination of calls should not exceed. Defaults to 0.5.
+
+    Returns:
+        list(list(call)): A list of combinations of calls that have a minimal significance (sorted by significance)
     """
-    exists = []
-    for k in gffd.keys():
-        start = gffd[k].get("start")
-        stop = gffd[k].get("end")
+    key = lambda x: x["rel_score"]
+    calls = sorted(calls, reverse=True, key=key)
 
-        xx = loc in range(start, stop)
-        exists.append(xx)
+    def score(l):
+        """The score of a list of calls is the product of their relative score."""
+        return np.prod(list(map(key, l)))
 
-    if any(exists) == True:
-        return True
-    return False
+    def pred(l):
+        return score(l) > significance
+
+    iterators = []
+    # Loop over all the combinations of calls of all lengths
+    # TODO: Alternatives with the same position should not be combined.
+    for combination_of_length in map(
+        lambda n: combinations(calls, n), range(1, len(calls) + 1)
+    ):
+        # Stop taking combinations if pred is no longer. This only works if calls is sorted on score.
+        iterators.append(takewhile(pred, combination_of_length))
+
+    return sorted(chain(*iterators), reverse=True, key=score)
 
 
-def split_to_codons(seq):
-    """It takes a string of DNA and returns a list of codons (nucleotide triplets)
+def chunks(l, n):
+    """Generator for splitting a list into chunks.
 
-    Parameters
-    ----------
-    seq
-        the sequence to split
+    Args:
+        l (list(any)): The input list
+        n (int): The size of the chunks
 
-    Returns
-    -------
-        A list of codons
-
+    Yields:
+        list(any): sublists of size n
     """
-    return [seq[start : start + 3] for start in range(0, len(seq), 3)]
+    for i in range(0, len(l), n):
+        yield l[i : i + n]
 
 
-def SolveTripletLength(uds, mds):
-    """Check wether the combination of the uds (upcoming stretch of deletions) and the mds (group of minority deletions) is divisible by 3. If it is, return the length of the triplet. If it is not, return None.
+# def in_orf(loc, gffd):
+#     exists = []
+#     for k in gffd.keys():
+#         start = gffd[k].get("start")
+#         stop = gffd[k].get("end")
 
-    Parameters
-    ----------
-    uds
-        upcoming stretch of dels
-    mds
-        the minority-del group
+#         xx = loc in range(start, stop)
+#         exists.append(xx)
 
-    Returns
-    -------
-        A boolean value.
-
-    """
-    mdslen = len(mds)
-    udslen = len(uds)
-
-    if udslen % 3 == 0:
-        ## upcoming stretch is already divisible by 3
-
-        if mdslen % 3 == 0:
-            ## the minority-del group is also divisible by 3
-
-            return True  # return that the minority-del is good to be appended
-        ## the minority-del group is not divisible by 3
-        return False  # return that the minority-del should be ignored
-    else:
-        ## the upcoming stretch is NOT divisible by 3 -> the mds should make it so
-        if (mdslen + udslen) % 3 == 0:
-            ## the combination of minority-del group and the upcoming stretch is divisible by 3.
-            return True
-        return False
+#     if any(exists) == True:
+#         return True
+#     return False
 
 
-def CorrectStartPositions(gffd, shifts, p):
-    """Function takes a dictionary of gff data, a list of shifts, and a position. It then iterates
-    through the dictionary and updates the start position of each entry if the start position is greater
-    than the position
-
-    Parameters
-    ----------
-    gffd
-        a dictionary of dictionaries, where each key is a gene name, and each value is a dictionary of the
-        gene's attributes
-    shifts
-        the number of bases to shift the start positions by
-    p
-        the position of the first base of the insertion
-
-    Returns
-    -------
-        A dictionary with the updated start positions.
-
-    """
-    for k in gffd.keys():
-        start = gffd[k].get("start")
-
-        if start > p:
-            nstart = int(start) + int(shifts)
-            update = {"start": nstart}
-
-            gffd[k].update(update)
-    return gffd
+# def split_to_codons(seq):
+#     return [seq[start : start + 3] for start in range(0, len(seq), 3)]
 
 
-def CorrectGFF(oldgffdict, newgffdict, cons, p, inserts, mincov, cov):
-    """This function corrects the start and end positions of the genes in the new GFF file
+# def SolveTripletLength(uds, mds):
+#     mdslen = len(mds)
+#     udslen = len(uds)
 
-    Parameters
-    ----------
-    oldgffdict
-        a dictionary of the old gff file
-    newgffdict
-        the new gff dictionary
-    cons
-        the consensus sequence
-    p
-        the position of the current base
-    inserts
-        a dictionary of insertions, where the key is the position of the insertion and the value is the
-    nucleotide inserted
-    mincov
-        minimum coverage to consider a position as a potential insertion
-    cov
-        coverage of the contig
+#     if udslen % 3 == 0:
+#         ## upcoming stretch is already divisible by 3
 
-    Returns
-    -------
-        A dictionary of the corrected gff file.
+#         if mdslen % 3 == 0:
+#             ## the minority-del group is also divisible by 3
 
-    """
+#             return True  # return that the minority-del is good to be appended
+#         ## the minority-del group is not divisible by 3
+#         return False  # return that the minority-del should be ignored
+#     else:
+#         ## the upcoming stretch is NOT divisible by 3 -> the mds should make it so
+#         if (mdslen + udslen) % 3 == 0:
+#             ## the combination of minority-del group and the upcoming stretch is divisible by 3.
+#             return True
+#         return False
 
-    stopcodons = ["TAG", "TAA", "TGA"]
-    # rvstopcodon = ["CAT"]
 
-    if inserts is not None and p in inserts:
-        if cov > mincov:
-            newgffdict = CorrectStartPositions(
-                newgffdict, list(inserts[p].keys())[0], p
-            )
+# def CorrectStartPositions(gffd, shifts, p):
+#     for k in gffd.keys():
+#         start = gffd[k].get("start")
 
-    for k in newgffdict.keys():
-        start = newgffdict[k].get("start")
-        end = newgffdict[k].get("end")
-        orient = newgffdict[k].get("strand")
+#         if start > p:
+#             nstart = int(start) + int(shifts)
+#             update = {"start": nstart}
 
-        shift = 0
+#             gffd[k].update(update)
+#     return gffd
 
-        if p in range(start, end):
-            if orient == "+":
-                rseq = "".join(cons)[start - 1 :]
-                shift = rseq.count("-")
-                seq = rseq.replace("-", "")
 
-                if cons[-1] == "-":
-                    achieved = False
-                    override_end = oldgffdict[k].get("end")
-                    up = {"end": override_end}
-                    newgffdict[k].update(up)
+# def CorrectGFF(oldgffdict, newgffdict, cons, p, inserts, mincov, cov):
 
-                else:
+#     stopcodons = ["TAG", "TAA", "TGA"]
+#     # rvstopcodon = ["CAT"]
 
-                    codons = split_to_codons(seq)
+#     if inserts is not None and p in inserts:
+#         if cov > mincov:
+#             newgffdict = CorrectStartPositions(
+#                 newgffdict, list(inserts[p].keys())[0], p
+#             )
 
-                    achieved = False
+#     for k in newgffdict.keys():
+#         start = newgffdict[k].get("start")
+#         end = newgffdict[k].get("end")
+#         orient = newgffdict[k].get("strand")
 
-                    it = 0
-                    for c in codons:
-                        it += 1
-                        if any(s in c for s in stopcodons) is True:
-                            achieved = True
-                            break
-                    orfsize = it * 3
+#         shift = 0
 
-                    if shift % 3 == 0:
-                        newend = start + orfsize + shift - 1
-                    else:
-                        newend = start + orfsize + shift - 1
+#         if p in range(start, end):
+#             if orient == "+":
+#                 rseq = "".join(cons)[start - 1 :]
+#                 shift = rseq.count("-")
+#                 seq = rseq.replace("-", "")
 
-                    if achieved is False:
-                        newend = newend + 1
+#                 if cons[-1] == "-":
+#                     achieved = False
+#                     override_end = oldgffdict[k].get("end")
+#                     up = {"end": override_end}
+#                     newgffdict[k].update(up)
 
-                    if p == newend:
-                        up = {"end": newend}
-                        newgffdict[k].update(up)
+#                 else:
 
-    return newgffdict
+#                     codons = split_to_codons(seq)
+
+#                     achieved = False
+
+#                     it = 0
+#                     for c in codons:
+#                         it += 1
+#                         if any(s in c for s in stopcodons) is True:
+#                             achieved = True
+#                             break
+#                     orfsize = it * 3
+
+#                     if shift % 3 == 0:
+#                         newend = start + orfsize + shift - 1
+#                     else:
+#                         newend = start + orfsize + shift - 1
+
+#                     if achieved is False:
+#                         newend = newend + 1
+
+#                     if p == newend:
+#                         up = {"end": newend}
+#                         newgffdict[k].update(up)
+
+#     return newgffdict

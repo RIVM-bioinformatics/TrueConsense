@@ -7,19 +7,21 @@ import concurrent.futures as cf
 import multiprocessing
 import os
 import pathlib
+from re import M
 import sys
 
-from .Coverage import BuildCoverage
+import parmap
+
 from .func import MyHelpFormatter, color
 from .indexing import (
-    BuildIndex,
     Gffindex,
-    Override_index_positions,
-    Readbam,
-    read_override_index,
+    ReadBam,
+    read_override_positions,
+    ReadFasta,
 )
 from .Outputs import WriteOutputs
 from .version import __version__
+from .Calls import Calls
 
 
 def GetArgs(givenargs):
@@ -57,19 +59,21 @@ def GetArgs(givenargs):
         print(f'"{fname}" is not a file. Exiting...')
         sys.exit(1)
 
-    def check_index_override(fname):
-        if os.path.isfile(fname):
-            ext = "".join(pathlib.Path(fname).suffixes)
+    def check_index_override(filenames):
+        csv_fname, bam_fname = filenames
+        bam_fname = checkbam(bam_fname)
+        if os.path.isfile(csv_fname):
+            ext = "".join(pathlib.Path(csv_fname).suffixes)
             if ".csv" not in ext:
                 parser.error(
-                    f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a compressed csv file."
+                    f"Given file {color.YELLOW}({csv_fname}){color.END} doesn't seem to be a compressed csv file."
                 )
             if ".gz" not in ext:
                 parser.error(
-                    f"Given file {color.YELLOW}({fname}){color.END} doesn't seem to be a compressed csv file."
+                    f"Given file {color.YELLOW}({csv_fname}){color.END} doesn't seem to be a compressed csv file."
                 )
-            return fname
-        print(f'"{fname}" is not a file. Exiting...')
+            return csv_fname, bam_fname
+        print(f'"{csv_fname}" is not a file. Exiting...')
         sys.exit(1)
 
     parser = argparse.ArgumentParser(
@@ -183,9 +187,9 @@ def GetArgs(givenargs):
 
     opts.add_argument(
         "--index-override",
-        type=check_index_override,
-        metavar="File",
-        help="Override the positional index of certain genome positions with 'known' information if the given alignment is not sufficient for these positions\nMust be a compressed csv.\nPlease use with caution as this will overwrite the generated index at the given positions!\n",
+        nargs=2,
+        metavar="FILE",
+        help="Override the positional index of certain genome positions with 'known' information if the given alignment is not sufficient for these positions.\nFirst FILE must be a compressed csv containing the positions in the first column. The second FILE must be a bamfile to read these positions from\nPlease use with caution as this will overwrite the generated index at the given positions!\n",
     )
 
     opts.add_argument(
@@ -205,6 +209,8 @@ def GetArgs(givenargs):
     )
 
     args = parser.parse_args(givenargs)
+    if args.index_override:
+        check_index_override(args.index_override)
 
     return args
 
@@ -217,44 +223,46 @@ def main():
         sys.exit(1)
     args = GetArgs(sys.argv[1:])
 
-    bam = Readbam(args.input)
-
     with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
-        IndexDF = xc.submit(BuildIndex, args.input, args.reference)
         IndexGff = xc.submit(Gffindex, args.features)
+        ref_obj = xc.submit(ReadFasta, args.reference)
+        # IndexDF = xc.submit(BuildIndex, args.input, args.reference)
+        gff_obj = IndexGff.result()
+        ref_obj = ref_obj.result()
+        # IndexDF = IndexDF.result()
 
-        IndexDF = IndexDF.result()
-        IndexGff = IndexGff.result()
+    ref_file_location = args.reference
+    ref_contig = ref_obj.references[0]
+    ref_seq = ref_obj.fetch(ref_contig)
 
+    IncludeAmbig = not args.noambiguity
+
+    call_obj = Calls(
+        ref_file_location,
+        ref_contig,
+        ref_seq,
+        IncludeAmbig=IncludeAmbig,
+        significance=0.5,
+    )
+    call_obj.fill_positions_from_bam(bamfile=args.input)
     if args.index_override:
-        IndexDF = Override_index_positions(
-            IndexDF, read_override_index(args.index_override)
-        )
+        override_positions_file, override_bam_file = args.index_override
+        positions = list(read_override_positions(override_positions_file).index)
+        call_obj.fill_positions_from_bam(override_bam_file, positions)
+    call_obj.calculate_scores()
 
-    indexDict = IndexDF.to_dict("index")
-    GffHeader = IndexGff.header
-    GffDF = IndexGff.df
-    GffDict = GffDF.to_dict("index")
+    # with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
+    if args.depth_of_coverage is not None:
+        call_obj.p_index[["cov"]].to_csv(args.depth_of_coverage, sep="\t", header=False)
 
-    with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
-        if args.depth_of_coverage is not None:
-            xc.submit(BuildCoverage, indexDict, args.depth_of_coverage)
-
-    if args.noambiguity is False:
-        IncludeAmbig = True
-    elif args.noambiguity is True:
-        IncludeAmbig = False
-
-    WriteOutputs(
-        args.coverage_level,
-        indexDict,
-        GffDict,
-        args.input,
-        IncludeAmbig,
+    parmap.map(
+        WriteOutputs,
+        args.coverage_levels,
+        call_obj,
+        gff_obj,  # This is a dataframe of the gff
         args.variants,
         args.samplename,
-        args.reference,
         args.output_gff,
-        GffHeader,
         args.output,
+        pm_processes=args.threads,
     )
