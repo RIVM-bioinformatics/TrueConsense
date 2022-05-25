@@ -13,32 +13,22 @@ In order to run TrueConsense you will need the following information/files:
 ## Basic usage example
 
 In TrueConsense, the `--output`/`-o` flag corresponds to an **output directory** instead of a single file.  
-This is because TrueConsense can create multiple consensus-sequences at the same time. These various consensus-sequences will then be generated in the given output directory.  
 
-It's also necessary to provide the samplename to TrueConsense as the output consensus-sequence will follow a format as `{SAMPLENAME}_cov_ge_{COVERAGE_THRESHOLD}.fa` where `{SAMPLENAME}` and `{COVEREAGE_THRESHOLD}` will be replaced by the given information.
-
-When running TrueConsense, it's generally best to provide the same amount of threads as the various coverage-thresholds you wish to generate. For example: if you wish to generate consensus-sequences at thresholds 1, 5, and 10, then it's best to also provide 3 threads.
+It's also necessary to provide the samplename to TrueConsense as the output consensus-sequence will follow a format as `{SAMPLENAME}.fa` where `{SAMPLENAME}` will be replaced by the given information.
 
 
-**Example 1**: Create a consensus-sequence at coverage-thresholds 1, 5, and 10. Using 3 threads.
+**Example 1**: Create a consensus-sequence at coverage-threshold 50
 ```bash
 trueconsense \
     --input input.bam \
     --reference reference.fasta \
     --features reference-features.gff \
     --samplename example \
-    --output test_output/ \
-    --coverage-levels 1 5 10 \
-    --threads 3
+    --output test_output/example_cov_ge_50.fa \
+    --coverage-level 50
 ```
 
-This command will generate the following output-files in the `test_output` directory:
-
-```
-example_cov_ge_1.fa
-example_cov_ge_5.fa
-example_cov_ge_10.fa
-```
+This command will generate the `example.fa` file in the `test_output` directory
 
 ---
 
@@ -55,14 +45,13 @@ Aside from just creating a consensus-sequence, TrueConsense can also provide you
         --reference reference.fasta \
         --features reference-features.gff \
         --samplename example \
-        --output test_output/ \
-        --coverage-levels 1 5 10 \
-        --depth-of-coverage example_coverage.tsv \
-        --threads 3
+        --output test_output/example_cov_ge_30.fa \
+        --coverage-level 30 \
+        --depth-of-coverage example_coverage.tsv 
     ```
 
-??? summary "Generating VCF-files per coverage threshold"
-    TrueConsense can generate a VCF file per coverage threshold that *matches* the generated consensus-sequence on that particular coverage threshold.  
+??? summary "Generating a VCF-file"
+    TrueConsense can generate a VCF file matching the given coverage-threshold that *matches* the generated consensus-sequence.  
     With this, you can easily generate the various VCF-files in case a downstream analysis requires VCF input. Or if you wish to share data with other researchers but it's not possible to share (large)Fasta files.
 
     The VCF-output can be generated with the `--variants`/`-vcf` flag, this flag corresponds to an **output directory** and not a single file. The generated files follow the same naming structure as the normal consensus-sequences.
@@ -74,13 +63,12 @@ Aside from just creating a consensus-sequence, TrueConsense can also provide you
         --reference reference.fasta \
         --features reference-features.gff \
         --samplename example \
-        --output test_output/ \
-        --coverage-levels 1 5 10 \
-        --variants vcf_output/ \
-        --threads 3
+        --output test_output/example_cov_ge_30.fa \
+        --coverage-level 30 \
+        --variants vcf_output/example_cov_ge_30.vcf
     ```
 
-??? summary "Generating updated GFF files per coverage threshold"
+??? summary "Generating updated GFF files"
     TrueConsense keeps track of the open reading frames given in the input-gff and determines new stop-positions and/or new start-positions when applicable for every open reading frame in the input.  
     This is done to make sure the generated consensus-sequence is possible when it comes to virus-biology.  
 
@@ -93,10 +81,9 @@ Aside from just creating a consensus-sequence, TrueConsense can also provide you
         --reference reference.fasta \
         --features reference-features.gff \
         --samplename example \
-        --output test_output/ \
-        --coverage-levels 1 5 10 \
-        --output-gff gff_output/ \
-        --threads 3
+        --output test_output/example_cov_ge_30.fa \
+        --coverage-level 30 \
+        --output-gff gff_output/example_cov_ge_30.gff
     ```
 
 TrueConsense calls IUPAC nucleotide ambiguity-codes by default when an aligned-position has an even (or near-even) split of nucleotides.  
@@ -116,10 +103,10 @@ There are some edge-cases where the alignment cannot be done without introducing
 In this case, the index on these positions can be overwritten with an index made in an earlier stage of analysis.  
 This can be done with the `--index-override` flag, the data must be provided as a compressed CSV (.csv.gz) file. Below is an example of the necessary format, where "X" is deletions and "I" is number of reads with an insertion. The first column (position) has no header.  
 
-||coverage                     |A     |T                                            |C  |G  |X  |I  |
-|------|-----------------------|------|---------------------------------------------|---|---|---|---|
-|1     |1                      |2     |7                                            |3  |5  |1  |3  |
-|2     |1                      |2     |3                                            |4  |10 |0  |0  |
+|     | coverage | A   | T   | C   | G   | X   | I   |
+| --- | -------- | --- | --- | --- | --- | --- | --- |
+| 1   | 1        | 2   | 7   | 3   | 5   | 1   | 3   |
+| 2   | 1        | 2   | 3   | 4   | 10  | 0   | 0   |
 
 !!! warning "Please only use this when absolutely necessary"
     Using the index override may solve a very specific issue for you particular analysis, but it will also cause the result to be much harder to validate.  

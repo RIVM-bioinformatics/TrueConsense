@@ -76,9 +76,6 @@ def GetArgs(givenargs):
         print(f'"{csv_fname}" is not a file. Exiting...')
         sys.exit(1)
 
-    def currentpath():
-        return os.getcwd()
-
     parser = argparse.ArgumentParser(
         prog="TrueConsense",
         usage="%(prog)s [required options] [optional arguments]",
@@ -104,9 +101,9 @@ def GetArgs(givenargs):
         "--output",
         "-o",
         type=str,
-        default=currentpath(),
-        metavar="DIR",
-        help="Output directory where the (various) consensus fasta files will be placed",
+        default=os.getcwd() + 'consensus.fasta',
+        metavar="File",
+        help="Output consensus fasta",
         required=True,
     )
 
@@ -129,13 +126,12 @@ def GetArgs(givenargs):
     )
 
     reqs.add_argument(
-        "--coverage-levels",
+        "--coverage-level",
         "-cov",
         type=int,
-        nargs="+",
-        default=1,
-        metavar="1 5 10",
-        help="List of one or multiple 'levels' that will be used as the minimum coverage",
+        default=30,
+        metavar="100",
+        help="The minimum coverage level of the consensus and variant calls",
         required=True,
     )
 
@@ -143,7 +139,7 @@ def GetArgs(givenargs):
         "--samplename",
         "-name",
         metavar="Text",
-        help="Name of the sample that is being processed, will be used to create the fasta files and fasta header(s)",
+        help="Name of the sample that is being processed, will be used to create the fasta header",
         required=True,
     )
 
@@ -153,8 +149,8 @@ def GetArgs(givenargs):
         "--variants",
         "-vcf",
         type=str,
-        metavar="DIR",
-        help="Create VCF files for every given coverage level within the given directory. The created files start with the given samplename",
+        metavar="File",
+        help="Output VCF file",
     )
 
     opts.add_argument(
@@ -169,8 +165,8 @@ def GetArgs(givenargs):
         "--output-gff",
         "-ogff",
         type=str,
-        metavar="DIR",
-        help="Create a corrected GFF file for every given coverage level within the given directory. The created files start with the given samplename",
+        metavar="File",
+        help="Ouput location a corrected GFF file",
     )
 
     opts.add_argument(
@@ -178,7 +174,7 @@ def GetArgs(givenargs):
         "-t",
         default=standard_threads,
         metavar="N",
-        help="Number of threads that can be used by TrueConsense.",
+        help="Number of threads that can be used by TrueConsense",
         type=int,
     )
 

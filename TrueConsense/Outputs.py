@@ -5,8 +5,23 @@ from datetime import date
 from .ORFs import RestoreORFS
 
 
-def WriteGFF(gffheader, gffdict, outdir, name, cov):
-    with open(f"{outdir}/{name}_cov_ge_{cov}.gff", "w") as out:
+def WriteGFF(gffheader, gffdict, output_gff, name):
+    """Function takes a GFF header, a dictionary of GFF features, an output directory, and a name for
+    the output file, and writes the GFF header and the GFF features to a file in the output directory
+
+    Parameters
+    ----------
+    gffheader
+        The header of the GFF file.
+    gffdict
+        a dictionary of GFF features
+    outdir
+        the directory where you want the output files to go
+    name
+        the name of the file you want to write
+
+    """
+    with open(output_gff, "w") as out:
         out.write(gffheader)
 
         for k, v in gffdict.items():

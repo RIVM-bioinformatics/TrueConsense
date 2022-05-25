@@ -13,6 +13,18 @@ def ReadFasta(f):
 
 
 def Gffindex(file):
+    """Reads in a GFF3 file and returns a pandas dataframe
+
+    Parameters
+    ----------
+    file
+        the path to the gff file
+
+    Returns
+    -------
+        A dataframe
+
+    """
     return gffpd.read_gff3(file)
 
 
