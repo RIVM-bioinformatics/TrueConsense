@@ -257,7 +257,7 @@ def main():
 
     parmap.map(
         WriteOutputs,
-        args.coverage_levels,
+        args.coverage_level,
         call_obj,
         gff_obj,  # This is a dataframe of the gff
         args.variants,
