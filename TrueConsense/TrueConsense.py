@@ -255,8 +255,7 @@ def main():
     if args.depth_of_coverage is not None:
         call_obj.p_index[["cov"]].to_csv(args.depth_of_coverage, sep="\t", header=False)
 
-    parmap.map(
-        WriteOutputs,
+    WriteOutputs(
         args.coverage_level,
         call_obj,
         gff_obj,  # This is a dataframe of the gff
@@ -264,5 +263,4 @@ def main():
         args.samplename,
         args.output_gff,
         args.output,
-        pm_processes=args.threads,
     )

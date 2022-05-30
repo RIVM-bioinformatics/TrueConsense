@@ -40,7 +40,7 @@ def WriteOutputs(
     WriteVCF,
     name,
     gffout,
-    outdir,
+    outputfile,
 ):
     """
     step 1: construct the consensus sequences, both with and without inserts
@@ -60,11 +60,11 @@ def WriteOutputs(
 
     if gffout is not None:
         call_obj.update_gff_coods_with_insertions(gff_obj)
-        gff_obj.to_gff3(f"{gffout}/{name}_cov_ge_{mincov}.gff")
+        gff_obj.to_gff3(f"{gffout}")
 
     if WriteVCF is not None:
         with open(
-            f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{mincov}.vcf", "w"
+            f"{os.path.abspath(WriteVCF)}", "w"
         ) as out:
             out.write(
                 f"""##fileformat=VCFv4.3
@@ -92,5 +92,5 @@ def WriteOutputs(
                 else:
                     out.write("\n")
 
-    with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{mincov}.fa", "w") as out:
+    with open(f"{os.path.abspath(outputfile)}", "w") as out:
         out.write(f">{name}_cov_ge_{mincov}\n{consensus}\n")
