@@ -172,9 +172,10 @@ class Calls:
 
             if len(seq) > 1:
                 frame_offset = frame_offset + len(seq) - 1
-
-        score = in_frame_counter / (in_frame_counter + out_of_frame_counter)
-        return score
+        
+        if in_frame_counter != 0:
+            return in_frame_counter / (in_frame_counter + out_of_frame_counter)
+        return 1
 
     def consensus(self):
         self.p_index["picked_seq"] = self.p_index[["picked_call", "calls"]].apply(
