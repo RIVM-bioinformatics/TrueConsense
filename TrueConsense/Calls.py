@@ -105,7 +105,7 @@ class Calls:
 
     def pick_first_in_calls(self):
         self.p_index["picked_call"] = self.p_index["calls"].map(
-            lambda c: c[0] if c and c is not np.nan else None
+            lambda c: c[0] if isinstance(c, list) else None
         )
 
     def score_coding_sequence(
