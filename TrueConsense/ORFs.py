@@ -12,7 +12,7 @@ def RestoreORFS(call_obj, gff_df):
     alt_calls = [
         alt_call
         for alt_calls in call_obj.p_index.calls
-        if alt_calls is not np.nan
+        if isinstance(alt_calls, list) is True
         for alt_call in alt_calls[1:]
         # TODO: Make this work for non-sorted picked calls
         if alt_call["rel_score"] > significance
