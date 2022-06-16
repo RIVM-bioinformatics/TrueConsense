@@ -1,6 +1,7 @@
 import time
 from itertools import *
 import numpy as np
+import math
 
 
 def RestoreORFS(call_obj, gff_df):
@@ -53,18 +54,20 @@ def RestoreORFS(call_obj, gff_df):
     print(f"Done fixing features: {time.time() - start_time}")
 
 
-def significant_combinations_of_calls(calls, significance=0.5):
+def significant_combinations_of_calls(calls, significance=0.5, max_combinations=1e6):
     """Scores and sorts alternative calls
 
     In the list of input calls, find combinations of calls that go over a specified significance level.
+    Returns an empty list if there are too many options.
 
     Args:
         calls (iterable of calls): these calls should have a property rel_score.
         significance (float, optional): the product of relative scores that a combination of calls should not exceed. Defaults to 0.5.
-
+        max_combinations (numeric, opional): Limit for return length to reduce the computational complexity. Defaults to 1e6
     Returns:
         list(list(call)): A list of combinations of calls that have a minimal significance (sorted by significance)
     """
+    # Technically this function has complexity O(2^n) where n is the length of the input calls. Since we put a limit to how many things we try it is worst-case O(n^2).
     key = lambda x: x["rel_score"]
     calls = sorted(calls, reverse=True, key=key)
 
@@ -75,30 +78,24 @@ def significant_combinations_of_calls(calls, significance=0.5):
     def pred(l):
         return score(l) > significance
 
-    iterators = []
+    # calculate max k for n choose k where predicate does not hold anymore
+    max_k = 0
+    for i in range(len(calls)):
+        if not pred(calls[:i]):
+            max_k = i - 1
+
+    # Do not even try more than max_combinations for alternative calls (technically allows for a little bit more)
+    # TODO: implement an error for this
+    if math.comb(len(calls), max_k) > max_combinations:
+        return []
+
     # Loop over all the combinations of calls of all lengths
-    # TODO: Alternatives with the same position should not be combined.
-    for combination_of_length in map(
-        lambda n: combinations(calls, n), range(1, len(calls) + 1)
-    ):
-        # Stop taking combinations if pred is no longer. This only works if calls is sorted on score.
-        iterators.append(takewhile(pred, combination_of_length))
+    # TODO: Alternatives with the same position should not be combined. In reality this should not happen too often.
+    combinations_of_length_k = list(
+        map(lambda k: combinations(calls, k), range(1, max_k))
+    )
 
-    return sorted(chain(*iterators), reverse=True, key=score)
-
-
-def chunks(l, n):
-    """Generator for splitting a list into chunks.
-
-    Args:
-        l (list(any)): The input list
-        n (int): The size of the chunks
-
-    Yields:
-        list(any): sublists of size n
-    """
-    for i in range(0, len(l), n):
-        yield l[i : i + n]
+    return sorted(chain(combinations_of_length_k), reverse=True, key=score)
 
 
 # def in_orf(loc, gffd):

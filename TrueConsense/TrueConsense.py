@@ -10,8 +10,6 @@ import pathlib
 from re import M
 import sys
 
-import parmap
-
 from .func import MyHelpFormatter, color
 from .indexing import (
     Gffindex,
@@ -101,7 +99,7 @@ def GetArgs(givenargs):
         "--output",
         "-o",
         type=str,
-        default=os.getcwd() + 'consensus.fasta',
+        default=os.getcwd() + "consensus.fasta",
         metavar="File",
         help="Output consensus fasta",
         required=True,
