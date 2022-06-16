@@ -7,7 +7,7 @@ We will update these docs when installation through Conda and/or pip is availabl
 
 ## Prerequisistes
 
-TrueConsense requires Python 3.7 or later to be installed on your system (or in an environment).
+TrueConsense requires Python 3.8 or later to be installed on your system (or in an environment).
 
 Other dependencies will be installed during the installation, your don't have to install them manually. These extra dependencies are as follows:
 
