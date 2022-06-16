@@ -54,7 +54,7 @@ def RestoreORFS(call_obj, gff_df):
     print(f"Done fixing features: {time.time() - start_time}")
 
 
-def significant_combinations_of_calls(calls, significance=0.5, max_combinations=1e6):
+def significant_combinations_of_calls(calls, significance=0.5, max_combinations=1e4):
     """Scores and sorts alternative calls
 
     In the list of input calls, find combinations of calls that go over a specified significance level.
@@ -63,7 +63,7 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
     Args:
         calls (iterable of calls): these calls should have a property rel_score.
         significance (float, optional): the product of relative scores that a combination of calls should not exceed. Defaults to 0.5.
-        max_combinations (numeric, opional): Limit for return length to reduce the computational complexity. Defaults to 1e6
+        max_combinations (numeric, opional): Limit for return length to reduce the computational complexity. Defaults to 1e4.
     Returns:
         list(list(call)): A list of combinations of calls that have a minimal significance (sorted by significance)
     """
@@ -83,10 +83,12 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
     for i in range(len(calls)):
         if not pred(calls[:i]):
             max_k = i - 1
+            break
 
     # Do not even try more than max_combinations for alternative calls (technically allows for a little bit more)
     # TODO: implement an error for this
-    if math.comb(len(calls), max_k) > max_combinations:
+    number_of_possible_alternatives = math.comb(len(calls), max_k)
+    if number_of_possible_alternatives > max_combinations:
         return []
 
     # Loop over all the combinations of calls of all lengths
@@ -95,7 +97,7 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
         map(lambda k: combinations(calls, k), range(1, max_k))
     )
 
-    return sorted(chain(combinations_of_length_k), reverse=True, key=score)
+    return sorted(chain(*combinations_of_length_k), reverse=True, key=score)
 
 
 # def in_orf(loc, gffd):
