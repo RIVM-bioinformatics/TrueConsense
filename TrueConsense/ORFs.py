@@ -78,7 +78,7 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
     def pred(l):
         return score(l) > significance
 
-    # calculate max k for n choose k where predicate does not hold anymore
+    # calculate max_k for n choose k where predicate does not hold anymore
     max_k = 0
     for i in range(len(calls)):
         if not pred(calls[:i]):
@@ -90,14 +90,15 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
     number_of_possible_alternatives = math.comb(len(calls), max_k)
     if number_of_possible_alternatives > max_combinations:
         return []
-
+    
     # Loop over all the combinations of calls of all lengths
     # TODO: Alternatives with the same position should not be combined. In reality this should not happen too often.
     combinations_of_length_k = list(
-        map(lambda k: combinations(calls, k), range(1, max_k))
+        map(lambda k: combinations(calls, k), range(1, max_k+1))
     )
-
-    return sorted(chain(*combinations_of_length_k), reverse=True, key=score)
+    sorted_combinations = sorted(chain(*combinations_of_length_k), reverse=True, key=score)
+    sorted_filtered_combinations = takewhile(pred, sorted_combinations)
+    return sorted_filtered_combinations
 
 
 # def in_orf(loc, gffd):
