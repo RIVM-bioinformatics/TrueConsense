@@ -89,6 +89,7 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
     # TODO: implement an error for this
     number_of_possible_alternatives = math.comb(len(calls), max_k)
     if number_of_possible_alternatives > max_combinations:
+        print(f'Too many alternatives to try: {number_of_possible_alternatives}')
         return []
     
     # Loop over all the combinations of calls of all lengths
