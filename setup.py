@@ -20,7 +20,7 @@ setup(
     license="AGPLv3",
     packages=find_packages(),
     install_requires=[
-        "pysam=0.19",
+        "pysam==0.19.1",
         "pandas>=1.2.3",
         "gffpandas>=1.2.0",
         "tqdm>=4.59.0",
