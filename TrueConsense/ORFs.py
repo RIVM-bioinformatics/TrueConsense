@@ -81,9 +81,11 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
     # calculate max_k for n choose k where predicate does not hold anymore
     max_k = 0
     for i in range(len(calls)):
-        if not pred(calls[:i]):
-            max_k = i - 1
+        if pred(calls[:i]):
+            max_k = i
+        else
             break
+    print(f"Trying at most {max_k} mutations at the same time")
 
     # Do not even try more than max_combinations for alternative calls (technically allows for a little bit more)
     # TODO: implement an error for this
@@ -99,6 +101,7 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
     )
     sorted_combinations = sorted(chain(*combinations_of_length_k), reverse=True, key=score)
     sorted_filtered_combinations = takewhile(pred, sorted_combinations)
+    print(f"Found {len(sorted_filtered_combinations)} alternatives to try")
     return sorted_filtered_combinations
 
 
