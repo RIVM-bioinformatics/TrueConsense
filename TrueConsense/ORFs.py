@@ -83,7 +83,7 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
     for i in range(len(calls)):
         if pred(calls[:i]):
             max_k = i
-        else
+        else:
             break
     print(f"Trying at most {max_k} mutations at the same time")
 
