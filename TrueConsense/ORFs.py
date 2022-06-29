@@ -100,7 +100,7 @@ def significant_combinations_of_calls(calls, significance=0.5, max_combinations=
         map(lambda k: combinations(calls, k), range(1, max_k+1))
     )
     sorted_combinations = sorted(chain(*combinations_of_length_k), reverse=True, key=score)
-    sorted_filtered_combinations = len(takewhile(pred, sorted_combinations))
+    sorted_filtered_combinations = list(takewhile(pred, sorted_combinations))
     print(f"Found {sorted_filtered_combinations} alternatives to try")
     return sorted_filtered_combinations
 
