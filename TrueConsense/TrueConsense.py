@@ -234,6 +234,7 @@ def main():
     indexDict = IndexDF.to_dict("index")
     GffHeader = IndexGff.header
     GffDF = IndexGff.df
+    GffDF["seq_id"] = args.samplename
     GffDict = GffDF.to_dict("index")
 
     with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
