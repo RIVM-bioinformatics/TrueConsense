@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.5.1](https://www.github.com/RIVM-bioinformatics/TrueConsense/compare/v0.5.0...v0.5.1) (2022-11-24)
+
+
+### Bug Fixes
+
+* change the seq_id in the output gff to match the input samplename ([37b7d9e](https://www.github.com/RIVM-bioinformatics/TrueConsense/commit/37b7d9efacb539fb33581e37dc6fcb56c3a2c1d5))
+
 ## [0.5.0](https://www.github.com/RIVM-bioinformatics/TrueConsense/compare/v0.4.0...v0.5.0) (2022-04-22)
 
 
