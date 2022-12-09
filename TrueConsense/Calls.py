@@ -218,7 +218,7 @@ class Calls:
         if picked_call["seq"] == "-":
             return "-"
         max_score = max(c["score"] for c in alt_calls)
-        ambig_threshold = max_score - 0.1  # Everything within 10% of the most-occuring
+        ambig_threshold = max_score - 0.2  # Everything within 20% of the most-occuring
         calls = [
             c["seq"]
             for c in alt_calls
