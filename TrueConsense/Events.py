@@ -71,13 +71,12 @@ def ExtractInserts(bam, position):
         for i in items:
             found.append(i.upper())
         sorteddist = dict(Counter(found).most_common())
-        a = next(iter(sorteddist))
-        match = re.search("(\d)([a-zA-Z]+)", a)
-
-        if match:
-            bases = match.group(2)
-            insertsize = match.group(1)
-            return bases, insertsize
+        for a in sorteddist:
+            match = re.search("(\d)([a-zA-Z]+)", a)
+            if match:
+                bases = match.group(2)
+                insertsize = match.group(1)
+                return bases, insertsize
         return None, None
     return None, None
 
