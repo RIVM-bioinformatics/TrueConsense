@@ -71,7 +71,7 @@ class Calls:
         self.p_index["cov"] = self.p_index.query_sequences.apply(len)
 
     def remove_calls_with_low_coverage(self, mincov):
-        self.p_index.at[self.p_index["cov"] < mincov, "calls"] = np.nan
+        self.p_index.loc[self.p_index["cov"] < mincov, "calls"] = np.nan
 
     def insert_calls(self, calls):
         """Inserts calls into p_index['picked_call']

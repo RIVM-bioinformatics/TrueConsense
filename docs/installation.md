@@ -14,7 +14,6 @@ Other dependencies will be installed during the installation, your don't have to
 * pysam<0.16
 * pandas>=1.2.3
 * gffpandas>=1.2.0
-* parmap>=1.5.2
 * tqdm>=4.59.0
 * biopython>=1.78
 

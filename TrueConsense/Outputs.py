@@ -3,7 +3,8 @@ import sys
 from datetime import date
 
 from .ORFs import RestoreORFS
-
+from TrueConsense.Calls import Calls
+from gffpandas.gffpandas import Gff3DataFrame
 
 def WriteGFF(gffheader, gffdict, output_gff, name):
     """Function takes a GFF header, a dictionary of GFF features, an output directory, and a name for
@@ -34,13 +35,13 @@ def WriteGFF(gffheader, gffdict, output_gff, name):
 
 
 def WriteOutputs(
-    mincov,
-    call_obj,
-    gff_obj,
-    WriteVCF,
-    name,
-    gffout,
-    outdir,
+    mincov: int,
+    call_obj: Calls,
+    gff_obj: Gff3DataFrame,
+    WriteVCF: str,
+    name: str,
+    gffout: str,
+    outdir: str,
 ):
     """
     step 1: construct the consensus sequences, both with and without inserts
@@ -52,7 +53,8 @@ def WriteOutputs(
     call_obj.remove_calls_with_low_coverage(mincov)
     call_obj.sort_highest_score()
     call_obj.pick_first_in_calls()
-    RestoreORFS(call_obj, gff_obj.attributes_to_columns())
+    x = gff_obj.attributes_to_columns()
+    RestoreORFS(call_obj, x)
 
     print("Making consensus")
     consensus = call_obj.consensus()

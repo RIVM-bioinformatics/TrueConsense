@@ -2,6 +2,7 @@ import gffpandas.gffpandas as gffpd
 import pandas as pd
 import pysam
 import time
+from AminoExtract import SequenceReader, GFFDataFrame
 
 
 def ReadBam(f):
@@ -12,8 +13,8 @@ def ReadFasta(f):
     return pysam.FastaFile(f)
 
 
-def Gffindex(file):
-    """Reads in a GFF3 file and returns a pandas dataframe
+def Gffindex(file: str) -> GFFDataFrame:
+    """Reads in a GFF3 file and returns a GFFDataFrame
 
     Parameters
     ----------
@@ -22,10 +23,11 @@ def Gffindex(file):
 
     Returns
     -------
-        A dataframe
+        A GFFDataFrame
 
     """
-    return gffpd.read_gff3(file)
+    reader = SequenceReader(logger=None, verbose=False)
+    return reader.read_gff(file)
 
 
 def read_override_positions(f):

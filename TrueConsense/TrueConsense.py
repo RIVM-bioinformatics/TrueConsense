@@ -10,7 +10,6 @@ import pathlib
 from re import M
 import sys
 
-import parmap
 
 from .func import MyHelpFormatter, color
 from .indexing import (
@@ -215,13 +214,15 @@ def GetArgs(givenargs):
     return args
 
 
-def main():
-    if len(sys.argv[1:]) < 1:
+def main(arguments: list[str] | None = None):
+    if not arguments:
+        arguments = sys.argv[1:]
+    if len(arguments) < 1:
         print(
             "TrueConsense was called but no arguments were given, please try again.\nUse 'TrueConsense -h' to see the help document"
         )
         sys.exit(1)
-    args = GetArgs(sys.argv[1:])
+    args = GetArgs(arguments)
 
     with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
         IndexGff = xc.submit(Gffindex, args.features)
@@ -255,14 +256,13 @@ def main():
     if args.depth_of_coverage is not None:
         call_obj.p_index[["cov"]].to_csv(args.depth_of_coverage, sep="\t", header=False)
 
-    parmap.map(
-        WriteOutputs,
-        args.coverage_levels,
-        call_obj,
-        gff_obj,  # This is a dataframe of the gff
-        args.variants,
-        args.samplename,
-        args.output_gff,
-        args.output,
-        pm_processes=args.threads,
+
+    WriteOutputs(
+        mincov=args.coverage_level,
+        call_obj=call_obj,
+        gff_obj=gff_obj,
+        WriteVCF=args.variants,
+        name=args.samplename,
+        gffout=args.output_gff,
+        outdir=args.output,
     )
