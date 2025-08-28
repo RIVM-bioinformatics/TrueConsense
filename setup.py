@@ -20,11 +20,11 @@ setup(
     license="AGPLv3",
     packages=find_packages(),
     install_requires=[
-        "pysam<0.16",
+        "pysam",
         "pandas>=1.2.3",
-        "gffpandas>=1.2.0",
         "tqdm>=4.59.0",
         "biopython>=1.78",
+        "aminoextract"
     ],
     entry_points={
         "console_scripts": [

@@ -11,11 +11,11 @@ TrueConsense requires Python 3.7 or later to be installed on your system (or in 
 
 Other dependencies will be installed during the installation, your don't have to install them manually. These extra dependencies are as follows:
 
-* pysam<0.16
+* pysam
 * pandas>=1.2.3
-* gffpandas>=1.2.0
 * tqdm>=4.59.0
 * biopython>=1.78
+* aminoextract
 
 We strongly advise you to use a conda environment (or similar) to make sure there won't be any conflicts in package dependencies.
 
