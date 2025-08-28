@@ -24,7 +24,7 @@ setup(
         "pandas>=1.2.3",
         "tqdm>=4.59.0",
         "biopython>=1.78",
-        "aminoextract"
+        "aminoextract @ git+https://github.com/RIVM-bioinformatics/aminoextract@dev"
     ],
     entry_points={
         "console_scripts": [

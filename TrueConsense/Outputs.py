@@ -26,7 +26,7 @@ def WriteGFF(gffheader, gffdict, output_gff, name):
 
     """
     with open(output_gff, "w") as out:
-        out.write(gffheader)
+        out.write(gffheader.raw_text)
 
         for k, v in gffdict.items():
             for nk, nv in v.items():
