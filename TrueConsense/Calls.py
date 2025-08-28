@@ -117,7 +117,7 @@ class Calls:
 
         Args:
             p_index (pd.DataFrame): A pandas dataframe with a column picked_call.
-            feature (pd.Series): A row of a gff as produced with gffpandas dataframe with attributes_to_columns
+            feature (pd.Series): A row of a gff as produced with aminoextract with attributes_to_columns
             ends_with_stop_codon (bool, optional): Whether the last codon of the feature is a stop. Defaults to True.
             starts_with_atg (bool, optional): Whether the first codon of the feature is a start. Defaults to True.
 
@@ -234,7 +234,7 @@ class Calls:
             .apply(lambda call: len(call["seq"]) - 1)
             # -1 is needed because it includes the first base at the call position
         )
-        return call_lengths[call_lengths > 1].iteritems()
+        return call_lengths[call_lengths > 1]
 
     def update_gff_coods_with_insertions(self, gff):
         # Take last insertion first, since coordinates shift
@@ -254,9 +254,6 @@ class Calls:
                 )
             return line
 
-        gff.header = "\n".join(
-            edit_sequence_region(line) for line in gff.header.split("\n")
-        )
 
         # Update gff with new stop codons
         if not self.cons:

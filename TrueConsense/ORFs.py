@@ -28,7 +28,6 @@ def RestoreORFS(call_obj, gff_df):
             continue
         # TODO: fix for overlapping features (they should be scored together, as calls in one feature can affect another)
         feature_score = call_obj.score_coding_sequence(feature)
-        print(f"Fixing {feature.Name} with score {feature_score}")
 
         best_calls = []
         for new_calls in significant_combinations_of_calls(
@@ -49,7 +48,6 @@ def RestoreORFS(call_obj, gff_df):
                 best_calls = new_calls
             call_obj.insert_calls(previous_calls)  # restore to default
         call_obj.insert_calls(best_calls)
-        print(f"Final score of {feature.Name} is {feature_score}")
     print(f"Done fixing features: {time.time() - start_time}")
 
 

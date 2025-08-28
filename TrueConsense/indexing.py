@@ -1,7 +1,5 @@
-import gffpandas.gffpandas as gffpd
 import pandas as pd
 import pysam
-import time
 from AminoExtract import SequenceReader, GFFDataFrame
 
 

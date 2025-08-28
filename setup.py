@@ -22,7 +22,7 @@ setup(
     install_requires=[
         "pysam<0.16",
         "pandas>=1.2.3",
-        "gffpandas>=1.2.0",
+        "aminoextract",
         "tqdm>=4.59.0",
         "biopython>=1.78",
     ],

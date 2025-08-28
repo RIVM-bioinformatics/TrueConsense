@@ -4,7 +4,7 @@ from datetime import date
 
 from .ORFs import RestoreORFS
 from TrueConsense.Calls import Calls
-from gffpandas.gffpandas import Gff3DataFrame
+from AminoExtract import GFFDataFrame
 
 def WriteGFF(gffheader, gffdict, output_gff, name):
     """Function takes a GFF header, a dictionary of GFF features, an output directory, and a name for
@@ -37,7 +37,7 @@ def WriteGFF(gffheader, gffdict, output_gff, name):
 def WriteOutputs(
     mincov: int,
     call_obj: Calls,
-    gff_obj: Gff3DataFrame,
+    gff_obj: GFFDataFrame,
     WriteVCF: str,
     name: str,
     gffout: str,
@@ -53,8 +53,7 @@ def WriteOutputs(
     call_obj.remove_calls_with_low_coverage(mincov)
     call_obj.sort_highest_score()
     call_obj.pick_first_in_calls()
-    x = gff_obj.attributes_to_columns()
-    RestoreORFS(call_obj, x)
+    RestoreORFS(call_obj, gff_obj.df)
 
     print("Making consensus")
     consensus = call_obj.consensus()
@@ -62,11 +61,11 @@ def WriteOutputs(
 
     if gffout is not None:
         call_obj.update_gff_coods_with_insertions(gff_obj)
-        gff_obj.to_gff3(f"{gffout}/{name}_cov_ge_{mincov}.gff")
+        gff_obj.export_gff_to_file(gffout)
 
     if WriteVCF is not None:
         with open(
-            f"{os.path.abspath(WriteVCF)}/{name}_cov_ge_{mincov}.vcf", "w"
+            os.path.abspath(WriteVCF), "w"
         ) as out:
             out.write(
                 f"""##fileformat=VCFv4.3
@@ -94,5 +93,5 @@ def WriteOutputs(
                 else:
                     out.write("\n")
 
-    with open(f"{os.path.abspath(outdir)}/{name}_cov_ge_{mincov}.fa", "w") as out:
+    with open(os.path.abspath(outdir), "w") as out:
         out.write(f">{name}_cov_ge_{mincov}\n{consensus}\n")

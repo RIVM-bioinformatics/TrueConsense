@@ -13,9 +13,9 @@ Other dependencies will be installed during the installation, your don't have to
 
 * pysam<0.16
 * pandas>=1.2.3
-* gffpandas>=1.2.0
 * tqdm>=4.59.0
 * biopython>=1.78
+* aminoextract
 
 We strongly advise you to use a conda environment (or similar) to make sure there won't be any conflicts in package dependencies.
 
