@@ -9,7 +9,6 @@ from .Events import ListInserts
 from .indexing import Readbam
 from .Sequences import BuildConsensus
 
-
 def WriteGFF(gffheader, gffdict, output_gff, name):
     """Function takes a GFF header, a dictionary of GFF features, an output directory, and a name for
     the output file, and writes the GFF header and the GFF features to a file in the output directory

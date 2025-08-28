@@ -209,53 +209,56 @@ def GetArgs(givenargs):
     return args
 
 
-def main():
-    if len(sys.argv[1:]) < 1:
+def main(args: list[str] | None = None):
+    if not args:
+        args = sys.argv[1:]
+
+    if len(args) < 1:
         print(
             "TrueConsense was called but no arguments were given, please try again.\nUse 'TrueConsense -h' to see the help document"
         )
         sys.exit(1)
-    args = GetArgs(sys.argv[1:])
+    parsed_args = GetArgs(args)
 
-    bam = Readbam(args.input)
+    bam = Readbam(parsed_args.input)
 
-    with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
-        IndexDF = xc.submit(BuildIndex, args.input, args.reference)
-        IndexGff = xc.submit(Gffindex, args.features)
+    with cf.ThreadPoolExecutor(max_workers=parsed_args.threads) as xc:
+        IndexDF = xc.submit(BuildIndex, parsed_args.input, parsed_args.reference)
+        IndexGff = xc.submit(Gffindex, parsed_args.features)
 
         IndexDF = IndexDF.result()
         IndexGff = IndexGff.result()
 
-    if args.index_override:
+    if parsed_args.index_override:
         IndexDF = Override_index_positions(
-            IndexDF, read_override_index(args.index_override)
+            IndexDF, read_override_index(parsed_args.index_override)
         )
 
     indexDict = IndexDF.to_dict("index")
     GffHeader = IndexGff.header
     GffDF = IndexGff.df
-    GffDF["seq_id"] = args.samplename
+    GffDF["seq_id"] = parsed_args.samplename
     GffDict = GffDF.to_dict("index")
 
-    with cf.ThreadPoolExecutor(max_workers=args.threads) as xc:
-        if args.depth_of_coverage is not None:
-            xc.submit(BuildCoverage, indexDict, args.depth_of_coverage)
+    with cf.ThreadPoolExecutor(max_workers=parsed_args.threads) as xc:
+        if parsed_args.depth_of_coverage is not None:
+            xc.submit(BuildCoverage, indexDict, parsed_args.depth_of_coverage)
 
-    if args.noambiguity is False:
+    if parsed_args.noambiguity is False:
         IncludeAmbig = True
-    elif args.noambiguity is True:
+    elif parsed_args.noambiguity is True:
         IncludeAmbig = False
 
     WriteOutputs(
-        args.coverage_level,
+        parsed_args.coverage_level,
         indexDict,
         GffDict,
-        args.input,
+        parsed_args.input,
         IncludeAmbig,
-        args.variants,
-        args.samplename,
-        args.reference,
-        args.output_gff,
+        parsed_args.variants,
+        parsed_args.samplename,
+        parsed_args.reference,
+        parsed_args.output_gff,
         GffHeader,
-        args.output,
+        parsed_args.output,
     )
