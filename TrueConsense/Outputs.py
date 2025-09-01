@@ -29,8 +29,19 @@ def WriteGFF(gffheader, gffdict, output_gff, name):
     cols = GFFColumns.get_names()
     cols_without_attr = [col for col in cols if col != "attributes"]
 
-    def combine_dict_into_attributes(dict: dict[str, str]) -> str:
-        return ";".join(f"{k}={v}" for k, v in dict.items())
+    def combine_dict_into_attributes(input_dict: dict[str, str]) -> str:
+        attribute_dict = {}
+        for k, v in input_dict.items():
+            if k == "attributes":
+                for attribute in v.split(";"):
+                    if attribute == "":
+                        continue
+                    key, value = attribute.split("=")
+                    attribute_dict[key] = value
+            else:
+                attribute_dict[k] = v
+
+        return ";".join(f"{k}={v}" for k, v in attribute_dict.items())
 
     def clean_dict(input_dict: dict[str, str]) -> dict[str, str]:
         clean_dict = {}
@@ -38,10 +49,10 @@ def WriteGFF(gffheader, gffdict, output_gff, name):
         for k, v in input_dict.items():
             if str(k).lower() not in cols_without_attr:
                 attribute_dict[str(k).lower()] = str(v)
-                attribute_str = combine_dict_into_attributes(attribute_dict)
             else:
                 clean_dict[str(k).lower()] = str(v)
 
+        attribute_str = combine_dict_into_attributes(attribute_dict)
         clean_dict["attributes"] = attribute_str
         assert list(clean_dict.keys()) == cols
         return clean_dict
