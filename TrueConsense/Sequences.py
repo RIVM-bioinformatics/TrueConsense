@@ -106,8 +106,11 @@ def _orf_codonposition(gffdict, p):
             attr = gffdict[k].get("attributes", "")
             if not attr:
                 continue
-            a.append(str(attr.split(";")[1].split("=")[-1]))
-            a.append((p - start) % 3)
+            split_attr = attr.split(";")
+            if len(split_attr) < 2:
+                a.extend((str(attr.split(";")[0].split("=")[-1]), (p - start) % 3))
+                continue
+            a.extend((str(attr.split(";")[1].split("=")[-1]), (p - start) % 3))
     if a:
         return tuple(a)
     return None, None
