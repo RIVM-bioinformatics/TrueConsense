@@ -5,17 +5,17 @@ TrueConsense is only available on Linux (or Linux-based) operating systems. MacO
 TrueConsense will be made available for installation through Conda and Pip. However, this is currently not yet available.
 We will update these docs when installation through Conda and/or pip is available.
 
-## Prerequisistes
+## Prerequisites
 
-TrueConsense requires Python 3.7 or later to be installed on your system (or in an environment).
+TrueConsense requires Python 3.10 or later to be installed on your system (or in an environment).
 
 Other dependencies will be installed during the installation, your don't have to install them manually. These extra dependencies are as follows:
 
-* pysam
-* pandas>=1.2.3
-* tqdm>=4.59.0
-* biopython>=1.78
-* aminoextract
+* pysam==0.23.3
+* pandas==2.3.*
+* tqdm==4.59.*
+* biopython==1.85
+* aminoextract==0.4.0
 
 We strongly advise you to use a conda environment (or similar) to make sure there won't be any conflicts in package dependencies.
 
