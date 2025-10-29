@@ -28,7 +28,7 @@ dependencies = [
     "pandas==2.3.*",
     "tqdm==4.59.0",
     "biopython==1.85",
-    "aminoextract==0.4.0"
+    "aminoextract==0.4.1"
 ]
 
 [project.urls]

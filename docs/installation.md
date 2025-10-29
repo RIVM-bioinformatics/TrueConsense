@@ -15,7 +15,7 @@ Other dependencies will be installed during the installation, your don't have to
 * pandas==2.3.*
 * tqdm==4.59.*
 * biopython==1.85
-* aminoextract==0.4.0
+* aminoextract==0.4.1
 
 We strongly advise you to use a conda environment (or similar) to make sure there won't be any conflicts in package dependencies.
 
