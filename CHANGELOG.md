@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.2](https://github.com/RIVM-bioinformatics/TrueConsense/compare/v0.5.1...v0.5.2) (2025-11-03)
+
+
+### Bug Fixes
+
+* add handling of gff attributes with length of 1 ([8dde6d6](https://github.com/RIVM-bioinformatics/TrueConsense/commit/8dde6d6c3bf48164dbd83ffde737b2d12597db96))
+* fixed attribute parsing error ([3e3d3c6](https://github.com/RIVM-bioinformatics/TrueConsense/commit/3e3d3c65b4582ece7931ad2aba87b7e5c9b5c3c1))
+* fixed column name ([b3b33a8](https://github.com/RIVM-bioinformatics/TrueConsense/commit/b3b33a83d59e620c65786cec57250b639c9e41b8))
+* header obj was written instead of text ([5bb2dae](https://github.com/RIVM-bioinformatics/TrueConsense/commit/5bb2dae23756738d8bfa1d35df65c21e36ea21b6))
+* re-wrote the gff output function ([aa56f31](https://github.com/RIVM-bioinformatics/TrueConsense/commit/aa56f31fe7b927818b39d12108fc6ceb6eb2978a))
+* some gff lines dont have attributes ([05328c5](https://github.com/RIVM-bioinformatics/TrueConsense/commit/05328c5bbe4f0df6d8e7213f7e38f35c62a32828))
+* upgrade pysam everywhere ([edcbb96](https://github.com/RIVM-bioinformatics/TrueConsense/commit/edcbb96edf44213f547867b0b2fac007986944b7))
+
+
+### Dependencies
+
+* pin dependency versions ([eda4948](https://github.com/RIVM-bioinformatics/TrueConsense/commit/eda4948606478051060e6870cc02fe82559bc2a7))
+* update aminoextract to version 0.4.1 ([369d152](https://github.com/RIVM-bioinformatics/TrueConsense/commit/369d152c49e274421170ae6d849c75f64c460e66))
+
+
+### Documentation
+
+* minor changes to documentation ([ef1fc9e](https://github.com/RIVM-bioinformatics/TrueConsense/commit/ef1fc9e79bf1056c6332152465f1121f80baa182))
+
 ### [0.5.1](https://www.github.com/RIVM-bioinformatics/TrueConsense/compare/v0.5.0...v0.5.1) (2022-11-24)
 
 
