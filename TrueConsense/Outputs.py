@@ -8,7 +8,7 @@ from .Coverage import GetCoverage
 from .Events import ListInserts
 from .indexing import Readbam
 from .Sequences import BuildConsensus
-
+from AminoExtract.gff_data import GFFColumns
 
 def WriteGFF(gffheader, gffdict, output_gff, name):
     """Function takes a GFF header, a dictionary of GFF features, an output directory, and a name for
@@ -26,16 +26,49 @@ def WriteGFF(gffheader, gffdict, output_gff, name):
         the name of the file you want to write
 
     """
-    with open(output_gff, "w") as out:
-        out.write(gffheader)
+    cols = GFFColumns.get_names()
+    cols_without_attr = [col for col in cols if col != "attributes"]
 
-        for k, v in gffdict.items():
-            for nk, nv in v.items():
-                if str(nk) == str(list(v.keys())[-1]):
-                    out.write(str(nv))
-                else:
-                    out.write(str(nv) + "\t")
-            out.write("\n")
+    def combine_dict_into_attributes(input_dict: dict[str, str]) -> str:
+        attribute_dict = {}
+        for k, v in input_dict.items():
+            if k == "attributes":
+                for attribute in v.split(";"):
+                    if attribute == "":
+                        continue
+                    key, value = attribute.split("=")
+                    attribute_dict[key] = value
+            else:
+                attribute_dict[k] = v
+
+        return ";".join(f"{k}={v}" for k, v in attribute_dict.items())
+
+    def clean_dict(input_dict: dict[str, str]) -> dict[str, str]:
+        clean_dict = {}
+        attribute_dict = {}
+        for k, v in input_dict.items():
+            if str(k).lower() not in cols_without_attr:
+                attribute_dict[str(k).lower()] = str(v)
+            else:
+                clean_dict[str(k).lower()] = str(v)
+
+        attribute_str = combine_dict_into_attributes(attribute_dict)
+        clean_dict["attributes"] = attribute_str
+        assert list(clean_dict.keys()) == cols
+        return clean_dict
+
+
+    # the gffdict will have 0, 1, 2, etc as keys, for each line in the GFF file
+    # the values will be dictionaries containing the GFF columns for that line, with a lot of additional columns
+    # these additional columns will all be forced into the attributes column
+
+    with open(output_gff, "w") as out:
+        out.write(gffheader.raw_text)
+
+
+        for line_number, gff_data in gffdict.items():
+            cleaned_data = clean_dict(gff_data)
+            out.write("\t".join([str(v) for v in cleaned_data.values()]) + "\n")
 
 
 def WriteOutputs(
@@ -65,6 +98,7 @@ def WriteOutputs(
     )[0]
 
     if output_gff is not None:
+        
         WriteGFF(gffheader, newgff, output_gff, name)
 
     if output_vcf is not None:

@@ -1,4 +1,4 @@
-import gffpandas.gffpandas as gffpd
+from AminoExtract import SequenceReader, GFFDataFrame
 import pandas as pd
 import pysam
 
@@ -19,7 +19,7 @@ def Readbam(f):
     return pysam.AlignmentFile(f, "rb")
 
 
-def Gffindex(file):
+def Gffindex(file: str) -> GFFDataFrame:
     """Reads in a GFF3 file and returns a pandas dataframe
 
     Parameters
@@ -32,7 +32,8 @@ def Gffindex(file):
         A dataframe
 
     """
-    return gffpd.read_gff3(file)
+    reader = SequenceReader(logger=None)
+    return reader.read_gff(file)
 
 
 def read_override_index(f):

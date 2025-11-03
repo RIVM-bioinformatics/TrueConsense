@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "TrueConsense"
+dynamic = ["version"]
+description = "A nucleotide consensus caller for viral sequencing data that uses GFF data to improve accuracy"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "AGPL-3.0"
+authors = [
+    { name = "Florian Zwagemaker", email = "ids-bioinformatics@rivm.nl" },
+    { name = "Dennis Schmitz", email = "ids-bioinformatics@rivm.nl" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+dependencies = [
+    "pysam==0.23.3",
+    "pandas==2.3.*",
+    "tqdm==4.59.0",
+    "biopython==1.85",
+    "aminoextract==0.4.1"
+]
+
+[project.urls]
+homepage = "https://rivm-bioinformatics.github.io/TrueConsense/"
+source-code = "https://github.com/rivm-bioinformatics/TrueConsense"
+
+[project.scripts]
+trueconsense = "TrueConsense.TrueConsense:main"
+TrueConsense = "TrueConsense.TrueConsense:main"
+
+[tool.hatch.version]
+path = "TrueConsense/version.py"
+
+[tool.isort]
+atomic = true
+profile = "black"
+float_to_top = true
+skip_gitignore = true
+line_length = 88
+
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311', 'py312']
