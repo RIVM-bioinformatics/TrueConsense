@@ -128,11 +128,11 @@ def GetPercentages(c1, c2, c3, c4, cov):
 
 
 def AmbiguityType(p1, p2, p3, p4):
-    """If the distance between the first two percentages is less than 10, then check if the distance between the
-    first and third percentage is less than 10, and if the distance between the second and third percentage is
-    less than 10. If all of these are true, then check if the distance between the first and fourth
-    percentage is less than 10, and if the distance between the second and fourth percentage is less than 10,
-    and if the distance between the third and fourth percentage is less than 10. If all of these are true,
+    """If the distance between the first two percentages is less than 20, then check if the distance between the
+    first and third percentage is less than 20, and if the distance between the second and third percentage is
+    less than 20. If all of these are true, then check if the distance between the first and fourth
+    percentage is less than 20, and if the distance between the second and fourth percentage is less than 20,
+    and if the distance between the third and fourth percentage is less than 20. If all of these are true,
     then the ambiguity type is 4. If the first three are true, but the last three are not, then the
     ambiguity type is 3. If the first two are true, but the last three are not, then the ambiguity type
     is 2. If the first two are not true, then the ambiguity type is None
@@ -153,7 +153,7 @@ def AmbiguityType(p1, p2, p3, p4):
         the Ambiguity Type.
 
     """
-    maxdistance = 10
+    maxdistance = 20
     if (abs(p1 - p2)) <= maxdistance:
         if (abs(p1 - p3)) <= maxdistance and (abs(p2 - p3)) <= maxdistance:
             if (
